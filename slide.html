@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Limay RPT Status Report · 2Q 2026</title>
+<style>
+  :root{
+    --navy:#16233d;
+    --navy-2:#22355c;
+    --orange:#c0561f;
+    --orange-lt:#e07b39;
+    --cream:#fdf3e7;
+    --bg:#f6f4f1;
+    --card:#ffffff;
+    --ink:#1b2436;
+    --muted:#6b7688;
+    --line:#e4dfd7;
+    --red:#c0392b;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(22,35,61,.04), 0 8px 24px rgba(22,35,61,.07);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    font-family:"Inter","Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- Progress ---------- */
+  .progress{height:3px;background:var(--line);flex:none;position:relative;z-index:20;}
+  .progress-fill{
+    height:100%;width:0%;
+    background:linear-gradient(90deg,var(--orange),var(--orange-lt));
+    transition:width .45s cubic-bezier(.3,.8,.3,1);
+  }
+
+  /* ---------- Deck ---------- */
+  .deck{flex:1;position:relative;overflow:hidden;}
+
+  .slide{
+    position:absolute;inset:0;
+    display:none;
+    flex-direction:column;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:clamp(26px,4vh,52px) clamp(20px,4.5vw,64px) clamp(20px,3vh,36px);
+  }
+  .slide.active{display:flex;}
+  .slide-inner{width:100%;max-width:1180px;margin:0 auto;flex:1;display:flex;flex-direction:column;}
+
+  @keyframes fadeUp{
+    from{opacity:0;transform:translateY(18px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  .slide.active .slide-inner > *{
+    animation:fadeUp .6s cubic-bezier(.2,.75,.3,1) both;
+  }
+  .slide.active .slide-inner > *:nth-child(1){animation-delay:.02s;}
+  .slide.active .slide-inner > *:nth-child(2){animation-delay:.09s;}
+  .slide.active .slide-inner > *:nth-child(3){animation-delay:.16s;}
+  .slide.active .slide-inner > *:nth-child(4){animation-delay:.23s;}
+  .slide.active .slide-inner > *:nth-child(5){animation-delay:.30s;}
+
+  /* ---------- Typography ---------- */
+  .eyebrow{
+    font-size:clamp(10px,1.05vw,12px);
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    font-weight:700;
+    color:var(--orange);
+    margin-bottom:10px;
+  }
+  h1{
+    font-size:clamp(30px,5.4vw,64px);
+    line-height:1.02;
+    letter-spacing:-.03em;
+    font-weight:800;
+    margin:0 0 14px;
+    color:var(--navy);
+  }
+  h1 .accent{color:var(--orange);}
+  h2{
+    font-size:clamp(20px,2.7vw,34px);
+    line-height:1.15;
+    letter-spacing:-.02em;
+    font-weight:800;
+    margin:0 0 4px;
+    color:var(--navy);
+  }
+  h3{
+    font-size:clamp(14px,1.35vw,17px);
+    font-weight:750;
+    margin:0 0 8px;
+    letter-spacing:-.01em;
+    color:var(--navy);
+  }
+  .sub{
+    font-size:clamp(14px,1.55vw,19px);
+    color:var(--muted);
+    margin:0 0 22px;
+    font-weight:500;
+  }
+  .slide-head{margin-bottom:clamp(16px,2.6vh,30px);flex:none;}
+  .slide-head .rule{
+    width:54px;height:4px;border-radius:99px;
+    background:linear-gradient(90deg,var(--orange),var(--orange-lt));
+    margin-bottom:16px;
+  }
+  p{margin:0 0 12px;line-height:1.6;}
+
+  /* ---------- Title slide ---------- */
+  .slide-title{justify-content:center;}
+  .slide-title .slide-inner{justify-content:center;}
+  .title-wrap{max-width:900px;}
+  .title-wrap h1{margin-bottom:6px;}
+  .title-meta{
+    margin-top:26px;padding-top:20px;border-top:1px solid var(--line);
+    font-size:13px;color:var(--muted);line-height:1.7;
+  }
+  .hint{
+    margin-top:26px;font-size:12.5px;color:var(--muted);
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  }
+  kbd{
+    background:#fff;border:1px solid var(--line);border-bottom-width:2px;
+    border-radius:6px;padding:2px 7px;font-size:11.5px;font-family:inherit;
+    font-weight:600;color:var(--navy);
+  }
+
+  /* ---------- KPI cards ---------- */
+  .kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:clamp(12px,1.4vw,18px);
+    margin-bottom:clamp(16px,2.4vh,26px);
+  }
+  .kpi{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:clamp(16px,1.8vw,24px);
+    box-shadow:var(--shadow);
+    position:relative;
+    overflow:hidden;
+  }
+  .kpi::after{
+    content:"";position:absolute;left:0;top:0;height:3px;width:100%;
+    background:linear-gradient(90deg,var(--orange),var(--orange-lt));
+    opacity:.85;
+  }
+  .kpi .icon{
+    width:38px;height:38px;border-radius:11px;
+    background:var(--cream);
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:14px;
+  }
+  .kpi .icon svg{width:20px;height:20px;stroke:var(--orange);}
+  .kpi .val{
+    font-size:clamp(24px,3.1vw,38px);
+    font-weight:800;letter-spacing:-.03em;line-height:1;
+    color:var(--navy);margin-bottom:8px;
+    font-variant-numeric:tabular-nums;
+  }
+  .kpi .val.down{color:var(--red);}
+  .kpi .lbl{
+    font-size:11.5px;color:var(--muted);line-height:1.45;font-weight:600;
+    letter-spacing:.02em;
+  }
+
+  /* ---------- Note / callout ---------- */
+  .note{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-left:4px solid var(--orange);
+    border-radius:12px;
+    padding:16px 20px;
+    font-size:clamp(13px,1.25vw,15px);
+    line-height:1.65;
+    color:#3b465c;
+    box-shadow:var(--shadow);
+  }
+  .note strong{color:var(--navy);}
+  .note.warn{border-left-color:var(--red);background:#fdf4f2;}
+  .note.warn strong{color:var(--red);}
+
+  .flag{
+    display:inline-flex;align-items:center;gap:7px;
+    background:#fdecea;color:var(--red);
+    font-size:11px;font-weight:800;letter-spacing:.09em;
+    text-transform:uppercase;padding:5px 11px;border-radius:99px;
+    margin-bottom:12px;
+  }
+  .flag::before{
+    content:"";width:7px;height:7px;border-radius:50%;
+    background:var(--red);animation:pulse 1.6s infinite;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;transform:scale(1);}
+    50%{opacity:.35;transform:scale(.8);}
+  }
+
+  /* ---------- Chart cards ---------- */
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:clamp(16px,2vw,26px);
+    box-shadow:var(--shadow);
+  }
+  .chart-wrap{flex:1;display:flex;flex-direction:column;min-height:0;}
+  svg.chart{width:100%;height:auto;display:block;overflow:visible;}
+
+  /* chart primitives */
+  .gridline{stroke:#eae5dd;stroke-width:1;}
+  .axisline{stroke:#d6cfc4;stroke-width:1.2;}
+  .axislabel{fill:#8b93a3;font-size:12px;font-weight:600;font-family:inherit;}
+  .catlabel{fill:#3b465c;font-size:12.5px;font-weight:650;font-family:inherit;}
+  .vallabel{fill:#16233d;font-size:12px;font-weight:750;font-family:inherit;font-variant-numeric:tabular-nums;}
+
+  .h-bar{
+    transform-box:fill-box;
+    transform-origin:left center;
+    transform:scaleX(0);
+  }
+  .slide.active .h-bar{
+    animation:growX .85s cubic-bezier(.2,.75,.3,1) both;
+    animation-delay:var(--d,0s);
+  }
+  @keyframes growX{from{transform:scaleX(0);}to{transform:scaleX(1);}}
+
+  .line-path{
+    fill:none;stroke:var(--orange);stroke-width:3.5;
+    stroke-linecap:round;stroke-linejoin:round;
+    stroke-dasharray:1;stroke-dashoffset:1;
+  }
+  .slide.active .line-path{
+    animation:draw 1.5s cubic-bezier(.3,.8,.3,1) .15s both;
+  }
+  @keyframes draw{to{stroke-dashoffset:0;}}
+
+  .area-path{opacity:0;}
+  .slide.active .area-path{animation:fadeIn .9s ease 1s both;}
+  @keyframes fadeIn{to{opacity:1;}}
+
+  .dot-pt{
+    transform-box:fill-box;transform-origin:center;
+    transform:scale(0);
+  }
+  .slide.active .dot-pt{
+    animation:pop .45s cubic-bezier(.2,1.6,.4,1) both;
+    animation-delay:var(--d,1.1s);
+  }
+  @keyframes pop{to{transform:scale(1);}}
+
+  .donut-seg{
+    fill:none;stroke-width:36;
+    stroke-dasharray:0 440;
+    transition:none;
+  }
+  .slide.active .donut-seg{
+    animation:segIn .9s cubic-bezier(.3,.8,.3,1) both;
+    animation-delay:var(--d,0s);
+  }
+  @keyframes segIn{from{opacity:0;}to{opacity:1;}}
+
+  /* ---------- Legend ---------- */
+  .legend{display:flex;flex-direction:column;gap:9px;}
+  .legend-row{
+    display:flex;align-items:center;gap:11px;
+    padding:9px 12px;border-radius:11px;
+    background:#faf9f7;border:1px solid #efeae2;
+    font-size:13px;
+  }
+  .legend-row .swatch{
+    width:11px;height:11px;border-radius:3.5px;flex:none;
+  }
+  .legend-row .name{font-weight:650;color:var(--navy);flex:1;}
+  .legend-row .num{
+    font-weight:750;color:var(--muted);font-variant-numeric:tabular-nums;
+    font-size:12.5px;
+  }
+  .legend-row .pct{
+    font-weight:800;color:var(--orange);font-variant-numeric:tabular-nums;
+    min-width:62px;text-align:right;
+  }
+
+  /* ---------- Split layout ---------- */
+  .split{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:clamp(16px,2.2vw,32px);
+    align-items:center;flex:1;min-height:0;
+  }
+  .split.wide-left{grid-template-columns:1.35fr 1fr;}
+  .split.wide-right{grid-template-columns:1fr 1.35fr;}
+
+  /* ---------- Observations ---------- */
+  .obs-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:14px;
+  }
+  .obs{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);
+    display:flex;gap:14px;align-items:flex-start;
+  }
+  .obs .ico{
+    width:36px;height:36px;border-radius:10px;flex:none;
+    background:var(--navy);display:flex;align-items:center;justify-content:center;
+  }
+  .obs .ico svg{width:18px;height:18px;stroke:#fff;}
+  .obs .ico.alt{background:var(--orange);}
+  .obs h3{font-size:14px;margin-bottom:5px;}
+  .obs p{font-size:12.8px;color:var(--muted);margin:0;line-height:1.55;}
+
+  /* ---------- Recommendations ---------- */
+  .rec-list{display:flex;flex-direction:column;gap:12px;}
+  .rec{
+    display:flex;gap:16px;align-items:flex-start;
+    background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:16px 20px;box-shadow:var(--shadow);
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .rec:hover{transform:translateX(5px);box-shadow:0 10px 30px rgba(22,35,61,.11);}
+  .rec .num{
+    width:30px;height:30px;border-radius:9px;flex:none;
+    background:linear-gradient(135deg,var(--orange),var(--orange-lt));
+    color:#fff;font-weight:800;font-size:13.5px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .rec p{font-size:13.6px;line-height:1.6;margin:0;color:#3b465c;}
+  .rec p strong{color:var(--navy);}
+
+  /* ---------- Table ---------- */
+  table{
+    width:100%;border-collapse:collapse;font-size:13.2px;
+    font-variant-numeric:tabular-nums;
+  }
+  th{
+    text-align:left;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--muted);font-weight:800;padding:0 12px 11px;border-bottom:1.5px solid var(--line);
+  }
+  td{padding:12px;border-bottom:1px solid #f1ece4;color:#3b465c;}
+  tr:last-child td{border-bottom:none;}
+  td.num,th.num{text-align:right;}
+  tr.total td{font-weight:800;color:var(--navy);background:#faf7f2;}
+  tr.total td:first-child{border-radius:8px 0 0 8px;}
+  tr.total td:last-child{border-radius:0 8px 8px 0;}
+
+  .stat-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .stat{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:18px;box-shadow:var(--shadow);text-align:center;
+  }
+  .stat .big{
+    font-size:clamp(24px,3vw,34px);font-weight:800;letter-spacing:-.03em;
+    color:var(--navy);line-height:1;margin-bottom:8px;
+  }
+  .stat .big.orange{color:var(--orange);}
+  .stat .cap{font-size:11.5px;color:var(--muted);line-height:1.5;font-weight:600;}
+
+  /* ---------- Conclusion ---------- */
+  .concl{
+    display:flex;flex-direction:column;justify-content:center;
+    flex:1;text-align:left;
+  }
+  .concl .quote{
+    font-size:clamp(22px,3.6vw,46px);
+    font-weight:800;letter-spacing:-.03em;line-height:1.15;
+    color:var(--navy);margin:0 0 26px;max-width:20ch;
+  }
+  .concl .quote em{font-style:normal;color:var(--orange);}
+  .concl p{font-size:clamp(13.5px,1.5vw,17px);color:var(--muted);max-width:70ch;line-height:1.7;}
+
+  .pill-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:24px;}
+  .pill{
+    background:var(--cream);color:var(--orange);
+    font-size:12px;font-weight:750;padding:7px 14px;border-radius:99px;
+    border:1px solid #f3ddc4;
+  }
+
+  /* ---------- Nav ---------- */
+  .nav{
+    flex:none;
+    display:flex;align-items:center;gap:16px;
+    padding:12px clamp(18px,4vw,48px);
+    background:rgba(255,255,255,.86);
+    backdrop-filter:blur(12px);
+    border-top:1px solid var(--line);
+    z-index:20;
+  }
+  .nav-title{
+    font-size:12.5px;font-weight:700;color:var(--navy);
+    letter-spacing:.02em;min-width:0;flex:1;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .dots{display:flex;gap:6px;align-items:center;}
+  .dot{
+    width:7px;height:7px;border-radius:50%;border:none;padding:0;
+    background:#d5cfc5;cursor:pointer;transition:all .3s ease;
+  }
+  .dot:hover{background:#b3aa9c;transform:scale(1.25);}
+  .dot.active{
+    background:var(--orange);width:22px;border-radius:99px;
+  }
+  .nav-btns{display:flex;gap:8px;align-items:center;}
+  .nav-btn{
+    width:36px;height:36px;border-radius:10px;
+    border:1px solid var(--line);background:#fff;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:all .2s ease;color:var(--navy);
+  }
+  .nav-btn:hover:not(:disabled){background:var(--navy);color:#fff;border-color:var(--navy);}
+  .nav-btn:disabled{opacity:.32;cursor:not-allowed;}
+  .nav-btn svg{width:16px;height:16px;}
+  .counter{
+    font-size:12px;font-weight:750;color:var(--muted);
+    font-variant-numeric:tabular-nums;min-width:44px;text-align:right;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 860px){
+    .split,.split.wide-left,.split.wide-right{grid-template-columns:1fr;gap:18px;}
+    .nav-title{display:none;}
+    .dots{flex:1;justify-content:center;}
+    .slide{padding:22px 18px 18px;}
+  }
+  @media (max-width: 520px){
+    .kpi-grid{grid-template-columns:1fr 1fr;}
+    .stat-pair{grid-template-columns:1fr;}
+    .dots .dot:nth-child(n+8){display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+
+<main class="deck" id="deck">
+
+  <!-- ============ 1 · TITLE ============ -->
+  <section class="slide slide-title active" data-title="Title">
+    <div class="slide-inner">
+      <div class="title-wrap">
+        <div class="eyebrow">Office of the Municipal Assessor · Limay, Bataan</div>
+        <h1>Real Property<br><span class="accent">Status Report</span></h1>
+        <p class="sub">Comprehensive Analysis · 2nd Quarter 2026</p>
+        <div class="title-meta">
+          <strong style="color:var(--navy)">Source:</strong> Real Property Status Report 2026, Limay, Bataan<br>
+          Prepared by the Office of the Municipal Assessor — Limay, Bataan
+        </div>
+        <div class="hint">
+          <kbd>←</kbd> <kbd>→</kbd> navigate &nbsp;·&nbsp; <kbd>Space</kbd> next &nbsp;·&nbsp; swipe on touch
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2 · EXECUTIVE SUMMARY ============ -->
+  <section class="slide" data-title="Executive Summary">
+    <div class="slide-inner">
+      <div class="slide-head">
+        <div class="rule"></div>
+        <h2>Executive Summary</h2>
+        <p class="sub">Overall status of Limay, 2nd Quarter 2026</p>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 17l5-5 4 3 8-8"/><path d="M15 7h5v5"/>
+            </svg>
+          </div>
+          <div class="val" data-count="77.06" data-prefix="₱" data-suffix="B" data-decimals="2">₱0.00B</div>
+          <div class="lbl">Taxable<br>Assessed Value</div>
+        </div>
+
+        <div class="kpi">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s7-6.2 7-12a7 7 0 10-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/>
+            </svg>
+          </div>
+          <div class="val" data-count="2" data-suffix="nd" data-decimals="0">0nd</div>
+          <div class="lbl">Rank in Bataan<br>(11 Municipalities)</div>
+        </div>
+
+        <div class="kpi">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/>
+              <path d="M6 7h1M6 11h1M17 7h1M17 11h1"/>
+            </svg>
+          </div>
+          <div class="val" data-count="97.3" data-suffix="%" data-decimals="1">0.0%</div>
+          <div class="lbl">Industrial Share<br>of Taxable AV</div>
+        </div>
+
+        <div class="kpi">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 4v14"/><path d="M6 13l6 6 6-6"/>
+            </svg>
+          </div>
+          <div class="val down" data-count="-5.1" data-suffix="%" data-decimals="1">0.0%</div>
+          <div class="lbl">Net Change<br>(2021 – 2Q 2026)</div>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>Peak Value:</strong> ₱94.42B in 2023 &nbsp;|&nbsp;
+        <strong>Exempted Value:</strong> ₱16.77B (17.9% of combined AV)<br>
+        After peaking in 2023, Limay's assessed value fell for two consecutive years (2024, 2025) before
+        stabilizing in 2Q 2026 — a pattern tied closely to industrial asset reassessment.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3 · PROVINCIAL RANKING ============ -->
+  <section class="slide" data-title="Provincial Ranking">
+    <div class="slide-inner">
+      <div class="slide-head">
+        <div class="rule"></div>
+        <h2>Provincial Ranking: Total Assessed Value</h2>
+        <p class="sub">Limay compared to the 11 municipalities of Bataan, 2Q 2026</p>
+      </div>
+
+      <div class="card chart-wrap">
+        <svg class="chart" viewBox="0 0 900 400" role="img" aria-label="Horizontal bar chart of assessed value by municipality">
+          <!-- gridlines -->
+          <g>
+            <line class="gridline" x1="240" y1="10" x2="240" y2="372"/>
+            <line class="gridline" x1="380" y1="10" x2="380" y2="372"/>
+            <line class="gridline" x1="520" y1="10" x2="520" y2="372"/>
+            <line class="gridline" x1="660" y1="10" x2="660" y2="372"/>
+            <line class="gridline" x1="800" y1="10" x2="800" y2="372"/>
+            <line class="axisline" x1="100" y1="10" x2="100" y2="372"/>
+          </g>
+
+          <g>
+            <!-- Pilar -->
+            <text class="catlabel" x="88" y="33" text-anchor="end">Pilar</text>
+            <rect class="h-bar" style="--d:.05s" x="100" y="18" width="21" height="22" rx="4" fill="#9aa4b6"/>
+            <!-- Bagac -->
+            <text class="catlabel" x="88" y="65" text-anchor="end">Bagac</text>
+            <rect class="h-bar" style="--d:.10s" x="100" y="50" width="28" height="22" rx="4" fill="#9aa4b6"/>
+            <!-- Samal -->
+            <text class="catlabel" x="88" y="97" text-anchor="end">Samal</text>
+            <rect class="h-bar" style="--d:.15s" x="100" y="82" width="32" height="22" rx="4" fill="#9aa4b6"/>
+            <!-- Abucay -->
+            <text class="catlabel" x="88" y="129" text-anchor="end">Abucay</text>
+            <rect class="h-bar" style="--d:.20s" x="100" y="114" width="35" height="22" rx="4" fill="#9aa4b6"/>
+            <!-- Orani -->
+            <text class="catlabel" x="88" y="161" text-anchor="end">Orani</text>
+            <rect class="h-bar" style="--d:.25s" x="100" y="146" width="39" height="22" rx="4" fill="#9aa4b6"/>
+            <!-- Orion -->
+            <text class="catlabel" x="88" y="193" text-anchor="end">Orion</text>
+            <rect class="h-bar" style="--d:.30s" x="100" y="178" width="42" height="22" rx="4" fill="#9aa4b6"/>
+            <!-- Hermosa -->
+            <text class="catlabel" x="88" y="225" text-anchor="end">Hermosa</text>
+            <rect class="h-bar" style="--d:.35s" x="100" y="210" width="46" height="22" rx="4" fill="#9aa4b6"/>
+            <!-- Dinalupihan -->
+            <text class="catlabel" x="88" y="257" text-anchor="end">Dinalupihan</text>
+            <rect class="h-bar" style="--d:.40s" x="100" y="242" width="53" height="22" rx="4" fill="#9aa4b6"/>
+            <!-- Morong -->
+            <text class="catlabel" x="88" y="289" text-anchor="end">Morong</text>
+            <rect class="h-bar" style="--d:.45s" x="100" y="274" width="70" height="22" rx="4" fill="#9aa4b6"/>
+            <!-- Limay -->
+            <text class="catlabel" x="88" y="321" text-anchor="end" style="font-weight:800;fill:#c0561f">Limay</text>
+            <rect class="h-bar" style="--d:.50s" x="100" y="306" width="539.4" height="22" rx="4" fill="#c0561f"/>
+            <text class="vallabel" x="649" y="321" fill="#c0561f">₱77.06B</text>
+            <!-- Mariveles -->
+            <text class="catlabel" x="88" y="353" text-anchor="end">Mariveles</text>
+            <rect class="h-bar" style="--d:.55s" x="100" y="338" width="616" height="22" rx="4" fill="#22355c"/>
+            <text class="vallabel" x="726" y="353" fill="#22355c">≈ ₱88B</text>
+          </g>
+
+          <!-- x axis -->
+          <line class="axisline" x1="100" y1="372" x2="880" y2="372"/>
+          <text class="axislabel" x="100" y="392" text-anchor="middle">0B</text>
+          <text class="axislabel" x="240" y="392" text-anchor="middle">20B</text>
+          <text class="axislabel" x="380" y="392" text-anchor="middle">40B</text>
+          <text class="axislabel" x="520" y="392" text-anchor="middle">60B</text>
+          <text class="axislabel" x="660" y="392" text-anchor="middle">80B</text>
+          <text class="axislabel" x="800" y="392" text-anchor="middle">100B</text>
+        </svg>
+      </div>
+
+      <div class="note" style="margin-top:16px">
+        Limay and Mariveles together account for roughly <strong>81%</strong> of Bataan's combined provincial tax base,
+        dwarfing every other municipality. Limay's AV is driven almost entirely by <strong>industrial assets</strong>,
+        unlike Mariveles' broader mix.
+        <span style="display:block;margin-top:6px;font-size:11.5px;color:#8b93a3">
+          Non-Limay values read approximately from the source chart.
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4 · HISTORICAL TREND ============ -->
+  <section class="slide" data-title="Historical Trend 2021 – 2Q 2026">
+    <div class="slide-inner">
+      <div class="slide-head">
+        <div class="rule"></div>
+        <h2>Historical Trend: Assessed Value</h2>
+        <p class="sub">2021 – 2Q 2026 · boom, bust, then stabilization</p>
+      </div>
+
+      <div class="card chart-wrap">
+        <svg class="chart" viewBox="0 0 900 420" role="img" aria-label="Line chart of assessed value from 2021 to 2Q 2026">
+          <defs>
+            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#c0561f" stop-opacity="0.30"/>
+              <stop offset="100%" stop-color="#c0561f" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+
+          <!-- gridlines -->
+          <g>
+            <line class="gridline" x1="90" y1="30" x2="830" y2="30"/>
+            <line class="gridline" x1="90" y1="92" x2="830" y2="92"/>
+            <line class="gridline" x1="90" y1="154" x2="830" y2="154"/>
+            <line class="gridline" x1="90" y1="216" x2="830" y2="216"/>
+            <line class="gridline" x1="90" y1="278" x2="830" y2="278"/>
+            <line class="axisline" x1="90" y1="340" x2="830" y2="340"/>
+          </g>
+
+          <!-- y labels -->
+          <g>
+            <text class="axislabel" x="72" y="34" text-anchor="end">100B</text>
+            <text class="axislabel" x="72" y="96" text-anchor="end">80B</text>
+            <text class="axislabel" x="72" y="158" text-anchor="end">60B</text>
+            <text class="axislabel" x="72" y="220" text-anchor="end">40B</text>
+            <text class="axislabel" x="72" y="282" text-anchor="end">20B</text>
+            <text class="axislabel" x="72" y="344" text-anchor="end">0B</text>
+          </g>
+
+          <!-- area -->
+          <path class="area-path" fill="url(#areaGrad)"
+            d="M90,88.3 L238,54.8 L386,47.3 L534,68.8 L682,101.6 L830,101.1 L830,340 L90,340 Z"/>
+
+          <!-- line -->
+          <path class="line-path" pathLength="1"
+            d="M90,88.3 L238,54.8 L386,47.3 L534,68.8 L682,101.6 L830,101.1"/>
+
+          <!-- points -->
+          <g>
+            <circle class="dot-pt" style="--d:1.25s" cx="90"  cy="88.3"  r="6" fill="#fff" stroke="#c0561f" stroke-width="3"/>
+            <circle class="dot-pt" style="--d:1.35s" cx="238" cy="54.8"  r="6" fill="#fff" stroke="#c0561f" stroke-width="3"/>
+            <circle class="dot-pt" style="--d:1.45s" cx="386" cy="47.3"  r="7" fill="#c0561f" stroke="#fff" stroke-width="3"/>
+            <circle class="dot-pt" style="--d:1.55s" cx="534" cy="68.8"  r="6" fill="#fff" stroke="#c0561f" stroke-width="3"/>
+            <circle class="dot-pt" style="--d:1.65s" cx="682" cy="101.6" r="6" fill="#fff" stroke="#c0561f" stroke-width="3"/>
+            <circle class="dot-pt" style="--d:1.75s" cx="830" cy="101.1" r="6" fill="#fff" stroke="#c0561f" stroke-width="3"/>
+          </g>
+
+          <!-- peak annotation -->
+          <g class="dot-pt" style="--d:1.9s">
+            <text x="386" y="30" text-anchor="middle" fill="#c0561f" font-size="13" font-weight="800" font-family="inherit">PEAK ₱94.42B</text>
+          </g>
+
+          <!-- x labels -->
+          <g>
+            <text class="axislabel" x="90"  y="366" text-anchor="middle">2021</text>
+            <text class="axislabel" x="238" y="366" text-anchor="middle">2022</text>
+            <text class="axislabel" x="386" y="366" text-anchor="middle">2023</text>
+            <text class="axislabel" x="534" y="366" text-anchor="middle">2024</text>
+            <text class="axislabel" x="682" y="366" text-anchor="middle">2025</text>
+            <text class="axislabel" x="830" y="366" text-anchor="middle">2026 (2Q)</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="note" style="margin-top:16px">
+        <strong>Net change 2021 → 2Q 2026: −5.1%.</strong> The peak of ₱94.42B in 2023 was followed by two years of
+        double-digit-adjacent declines, now leveling off. <em style="color:#8b93a3;font-style:normal;font-size:12px">
+        (2Q 2026 vs full-year 2025; intermediate years read from source chart.)</em>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 5 · PROPERTY MIX ============ -->
+  <section class="slide" data-title="Property Mix by Classification">
+    <div class="slide-inner">
+      <div class="slide-head">
+        <div class="rule"></div>
+        <h2>Property Mix by Classification</h2>
+        <p class="sub">Taxable assessed value composition, 2Q 2026</p>
+      </div>
+
+      <div class="split wide-left">
+        <div class="card" style="display:flex;align-items:center;justify-content:center;padding:10px">
+          <svg class="chart" viewBox="0 0 260 260" style="max-width:320px" role="img" aria-label="Donut chart of property classification mix">
+            <g transform="translate(130,130) rotate(-90)">
+              <circle r="70" fill="none" stroke="#f0ece5" stroke-width="36"/>
+              <!-- Industrial 97.26% -->
+              <circle class="donut-seg" style="--d:.10s" r="70" stroke="#c0561f"
+                      stroke-dasharray="427.8 439.82" stroke-dashoffset="0"/>
+              <!-- Residential 1.86% -->
+              <circle class="donut-seg" style="--d:.55s" r="70" stroke="#22355c"
+                      stroke-dasharray="8.18 439.82" stroke-dashoffset="-427.8"/>
+              <!-- Commercial 0.40% -->
+              <circle class="donut-seg" style="--d:.70s" r="70" stroke="#5b7fb5"
+                      stroke-dasharray="1.76 439.82" stroke-dashoffset="-435.98"/>
+              <!-- Agricultural 0.38% -->
+              <circle class="donut-seg" style="--d:.85s" r="70" stroke="#8fa8c8"
+                      stroke-dasharray="1.67 439.82" stroke-dashoffset="-437.74"/>
+              <!-- Special 0.11% -->
+              <circle class="donut-seg" style="--d:1.0s" r="70" stroke="#c3cedd"
+                      stroke-dasharray="0.48 439.82" stroke-dashoffset="-439.41"/>
+            </g>
+            <text x="130" y="124" text-anchor="middle" fill="#16233d" font-size="30" font-weight="800" font-family="inherit">97.3%</text>
+            <text x="130" y="146" text-anchor="middle" fill="#8b93a3" font-size="12" font-weight="700" font-family="inherit" letter-spacing="1">INDUSTRIAL</text>
+          </svg>
+        </div>
+
+        <div>
+          <div class="legend">
+            <div class="legend-row">
+              <span class="swatch" style="background:#c0561f"></span>
+              <span class="name">Industrial</span>
+              <span class="num">₱74.95B</span>
+              <span class="pct">97.26%</span>
+            </div>
+            <div class="legend-row">
+              <span class="swatch" style="background:#22355c"></span>
+              <span class="name">Residential</span>
+              <span class="num">₱1.43B</span>
+              <span class="pct">1.86%</span>
+            </div>
+            <div class="legend-row">
+              <span class="swatch" style="background:#5b7fb5"></span>
+              <span class="name">Commercial</span>
+              <span class="num">₱305.01M</span>
+              <span class="pct">0.40%</span>
+            </div>
+            <div class="legend-row">
+              <span class="swatch" style="background:#8fa8c8"></span>
+              <span class="name">Agricultural</span>
+              <span class="num">₱290.15M</span>
+              <span class="pct">0.38%</span>
+            </div>
+            <div class="legend-row">
+              <span class="swatch" style="background:#c3cedd"></span>
+              <span class="name">Special</span>
+              <span class="num">—</span>
+              <span class="pct">0.11%</span>
+            </div>
+          </div>
+
+          <div class="note" style="margin-top:16px">
+            A single classification carries <strong>97.26%</strong> of the taxable base.
+            Residential, commercial and agricultural combined amount to less than <strong>2.7%</strong>.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6 · RPU INVENTORY ============ -->
+  <section class="slide" data-title="Real Property Units Inventory">
+    <div class="slide-inner">
+      <div class="slide-head">
+        <div class="rule"></div>
+        <h2>Real Property Units (RPU) Inventory</h2>
+        <p class="sub">Taxable vs. exempted properties, 2Q 2026</p>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th class="num">Land</th>
+              <th class="num">Building</th>
+              <th class="num">Machinery</th>
+              <th class="num">Total RPU</th>
+              <th class="num">Assessed Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Taxable</strong></td>
+              <td class="num">16,504</td>
+              <td class="num">6,937</td>
+              <td class="num">321</td>
+              <td class="num"><strong>23,762</strong></td>
+              <td class="num">₱77,061,337,774.94</td>
+            </tr>
+            <tr>
+              <td><strong>Exempted</strong></td>
+              <td class="num">1,629</td>
+              <td class="num">99</td>
+              <td class="num">27</td>
+              <td class="num"><strong>1,755</strong></td>
+              <td class="num">₱16,774,724,715.30</td>
+            </tr>
+            <tr class="total">
+              <td>TOTAL</td>
+              <td class="num">18,133</td>
+              <td class="num">7,036</td>
+              <td class="num">348</td>
+              <td class="num">25,517</td>
+              <td class="num">₱93,836,062,490.24</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="stat-pair">
+        <div class="stat">
+          <div class="big">93.1% <span style="color:#c9c2b8;font-weight:600">/</span> <span class="orange">82.1%</span></div>
+          <div class="cap">of RPUs are <strong>TAXABLE</strong> (count)<br>of combined AV is taxable (value)</div>
+        </div>
+        <div class="stat">
+          <div class="big">6.9% <span style="color:#c9c2b8;font-weight:600">/</span> <span class="orange">17.9%</span></div>
+          <div class="cap">of RPUs are <strong>EXEMPTED</strong> (count)<br>of combined AV is exempted (value)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 7 · EXEMPTED BREAKDOWN ============ -->
+  <section class="slide" data-title="Exempted Properties Breakdown">
+    <div class="slide-inner">
+      <div class="slide-head">
+        <div class="rule"></div>
+        <h2>Exempted Properties Breakdown</h2>
+        <p class="sub">₱16.77B — dominated by an unusually large "Others" category</p>
+      </div>
+
+      <div class="card chart-wrap">
+        <svg class="chart" viewBox="0 0 900 320" role="img" aria-label="Bar chart of exempted property categories">
+          <g>
+            <line class="gridline" x1="410" y1="10" x2="410" y2="292"/>
+            <line class="gridline" x1="630" y1="10" x2="630" y2="292"/>
+            <line class="gridline" x1="850" y1="10" x2="850" y2="292"/>
+            <line class="axisline" x1="190" y1="10" x2="190" y2="292"/>
+          </g>
+
+          <g>
+            <!-- Educational -->
+            <text class="catlabel" x="178" y="38" text-anchor="end">Educational</text>
+            <rect class="h-bar" style="--d:.05s" x="190" y="20" width="2" height="28" rx="2" fill="#9aa4b6"/>
+            <text class="vallabel" x="202" y="38">≈ 0</text>
+
+            <!-- Religious -->
+            <text class="catlabel" x="178" y="84" text-anchor="end">Religious</text>
+            <rect class="h-bar" style="--d:.10s" x="190" y="66" width="2" height="28" rx="2" fill="#9aa4b6"/>
+            <text class="vallabel" x="202" y="84">≈ 0</text>
+
+            <!-- Machineries-GOCC -->
+            <text class="catlabel" x="178" y="130" text-anchor="end">Machineries-GOCC</text>
+            <rect class="h-bar" style="--d:.15s" x="190" y="112" width="3" height="28" rx="2" fill="#9aa4b6"/>
+            <text class="vallabel" x="203" y="130">₱0.06B</text>
+
+            <!-- Pollution Control -->
+            <text class="catlabel" x="178" y="176" text-anchor="end">Pollution Control</text>
+            <rect class="h-bar" style="--d:.20s" x="190" y="158" width="45.3" height="28" rx="5" fill="#e07b39"/>
+            <text class="vallabel" x="245" y="176">₱1.03B · 6.1%</text>
+
+            <!-- Government -->
+            <text class="catlabel" x="178" y="222" text-anchor="end">Government</text>
+            <rect class="h-bar" style="--d:.25s" x="190" y="204" width="106.9" height="28" rx="5" fill="#22355c"/>
+            <text class="vallabel" x="307" y="222">₱2.43B · 14.5%</text>
+
+            <!-- Others -->
+            <text class="catlabel" x="178" y="268" text-anchor="end" style="font-weight:800;fill:#c0561f">Others</text>
+            <rect class="h-bar" style="--d:.30s" x="190" y="250" width="578.6" height="28" rx="5" fill="#c0561f"/>
+            <text class="vallabel" x="778" y="268" fill="#c0561f">₱13.15B · 78.4%</text>
+          </g>
+
+          <line class="axisline" x1="190" y1="292" x2="880" y2="292"/>
+          <text class="axislabel" x="190" y="312" text-anchor="middle">0B</text>
+          <text class="axislabel" x="410" y="312" text-anchor="middle">5B</text>
+          <text class="axislabel" x="630" y="312" text-anchor="middle">10B</text>
+          <text class="axislabel" x="850" y="312" text-anchor="middle">15B</text>
+        </svg>
+      </div>
+
+      <div class="note" style="margin-top:16px">
+        <strong>Key findings:</strong> "Others" dominates exemptions (₱13.15B, 78.4%) — unusually large and
+        <strong>warrants verification</strong>. Government properties follow (₱2.43B, 14.5%). Pollution Control &amp;
+        Environmental Protection (₱1.03B, 6.1%) reflects Limay's industrial character. Charitable and
+        Machineries-LWD categories show negligible or zero recorded value.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 8 · PER BARANGAY ============ -->
+  <section class="slide" data-title="Current Situation per Barangay">
+    <div class="slide-inner">
+      <div class="slide-head">
+        <div class="rule"></div>
+        <h2>Current Situation per Barangay</h2>
+        <p class="sub">Barangay Lamao dominates — and exceeds the municipal total</p>
+      </div>
+
+      <div class="card chart-wrap">
+        <svg class="chart" viewBox="0 0 900 420" role="img" aria-label="Bar chart of assessed value per barangay">
+          <g>
+            <line class="gridline" x1="303" y1="10" x2="303" y2="380"/>
+            <line class="gridline" x1="467" y1="10" x2="467" y2="380"/>
+            <line class="gridline" x1="630" y1="10" x2="630" y2="380"/>
+            <line class="gridline" x1="794" y1="10" x2="794" y2="380"/>
+            <line class="axisline" x1="140" y1="10" x2="140" y2="380"/>
+          </g>
+
+          <g>
+            <text class="catlabel" x="128" y="38" text-anchor="end">Lamao</text>
+            <rect class="h-bar" style="--d:.05s" x="140" y="24" width="720" height="20" rx="4" fill="#c0561f"/>
+            <text class="vallabel" x="870" y="38" text-anchor="end" fill="#c0561f">₱88.15B</text>
+
+            <text class="catlabel" x="128" y="68" text-anchor="end">Kitang II</text>
+            <rect class="h-bar" style="--d:.10s" x="140" y="54" width="21.2" height="20" rx="4" fill="#22355c"/>
+            <text class="vallabel" x="171" y="68">₱2.60B</text>
+
+            <text class="catlabel" x="128" y="98" text-anchor="end">Alangan</text>
+            <rect class="h-bar" style="--d:.14s" x="140" y="84" width="14.3" height="20" rx="4" fill="#22355c"/>
+            <text class="vallabel" x="164" y="98">₱1.75B</text>
+
+            <text class="catlabel" x="128" y="128" text-anchor="end">Duale</text>
+            <rect class="h-bar" style="--d:.18s" x="140" y="114" width="8.6" height="20" rx="4" fill="#22355c"/>
+            <text class="vallabel" x="158" y="128">₱1.05B</text>
+
+            <text class="catlabel" x="128" y="158" text-anchor="end">Reformista</text>
+            <rect class="h-bar" style="--d:.22s" x="140" y="144" width="4.5" height="20" rx="4" fill="#5b7fb5"/>
+            <text class="vallabel" x="154" y="158">₱0.55B</text>
+
+            <text class="catlabel" x="128" y="188" text-anchor="end">San Francisco de Asis</text>
+            <rect class="h-bar" style="--d:.26s" x="140" y="174" width="3.4" height="20" rx="4" fill="#5b7fb5"/>
+            <text class="vallabel" x="153" y="188">₱0.42B</text>
+
+            <text class="catlabel" x="128" y="218" text-anchor="end">St. Francis II</text>
+            <rect class="h-bar" style="--d:.30s" x="140" y="204" width="2.5" height="20" rx="4" fill="#8fa8c8"/>
+            <text class="vallabel" x="152" y="218">₱0.30B</text>
+
+            <text class="catlabel" x="128" y="248" text-anchor="end">Townsite</text>
+            <rect class="h-bar" style="--d:.34s" x="140" y="234" width="2.1" height="20" rx="4" fill="#8fa8c8"/>
+            <text class="vallabel" x="152" y="248">₱0.25B</text>
+
+            <text class="catlabel" x="128" y="278" text-anchor="end">Kitang I</text>
+            <rect class="h-bar" style="--d:.38s" x="140" y="264" width="1.5" height="20" rx="4" fill="#8fa8c8"/>
+            <text class="vallabel" x="151" y="278">₱0.18B</text>
+
+            <text class="catlabel" x="128" y="308" text-anchor="end">Landing</text>
+            <rect class="h-bar" style="--d:.42s" x="140" y="294" width="1.2" height="20" rx="4" fill="#c3cedd"/>
+            <text class="vallabel" x="151" y="308">₱0.14B</text>
+
+            <text class="catlabel" x="128" y="338" text-anchor="end">Poblacion</text>
+            <rect class="h-bar" style="--d:.46s" x="140" y="324" width="1" height="20" rx="4" fill="#c3cedd"/>
+            <text class="vallabel" x="150" y="338">₱0.09B</text>
+
+            <text class="catlabel" x="128" y="368" text-anchor="end">Wawa</text>
+            <rect class="h-bar" style="--d:.50s" x="140" y="354" width="1" height="20" rx="4" fill="#c3cedd"/>
+            <text class="vallabel" x="150" y="368">₱0.06B</text>
+          </g>
+
+          <line class="axisline" x1="140" y1="380" x2="880" y2="380"/>
+          <text class="axislabel" x="140" y="400" text-anchor="middle">0B</text>
+          <text class="axislabel" x="303" y="400" text-anchor="middle">20B</text>
+          <text class="axislabel" x="467" y="400" text-anchor="middle">40B</text>
+          <text class="axislabel" x="630" y="400" text-anchor="middle">60B</text>
+          <text class="axislabel" x="794" y="400" text-anchor="middle">80B</text>
+          <text class="axislabel" x="880" y="400" text-anchor="middle">100B</text>
+        </svg>
+      </div>
+
+      <div class="note warn" style="margin-top:16px">
+        <span class="flag">Data quality flag</span><br>
+        Lamao's reported AV (<strong>₱88.15B</strong>) alone exceeds the municipal taxable total
+        (<strong>₱77.06B</strong>); the sum of all 12 barangays (<strong>≈ ₱95.54B</strong>) also exceeds it.
+        <strong>Reconciliation is strongly recommended.</strong>
+        <span style="display:block;margin-top:6px;font-size:11.5px;color:#a5776f">
+          Barangay-level values read approximately from the source chart.
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 9 · KEY OBSERVATIONS ============ -->
+  <section class="slide" data-title="Key Observations">
+    <div class="slide-inner">
+      <div class="slide-head">
+        <div class="rule"></div>
+        <h2>Key Observations</h2>
+        <p class="sub">Key findings from the report</p>
+      </div>
+
+      <div class="obs-grid">
+        <div class="obs">
+          <div class="ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s7-6.2 7-12a7 7 0 10-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Near-parity with the top-ranked municipality</h3>
+            <p>2nd of 11 — Limay and Mariveles together hold ~81% of Bataan's tax base.</p>
+          </div>
+        </div>
+
+        <div class="obs">
+          <div class="ico alt">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 4v14"/><path d="M6 13l6 6 6-6"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Boom, bust, then stabilization</h3>
+            <p>Peaked in 2023 (₱94.42B), fell through 2025, net −5.1% since 2021.</p>
+          </div>
+        </div>
+
+        <div class="obs">
+          <div class="ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 20h18"/><path d="M4 20V10l4 3V7l4 3V4l4 3v13"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Extreme industrial concentration</h3>
+            <p>Industrial property alone is 97.3% of taxable AV — minimal diversification.</p>
+          </div>
+        </div>
+
+        <div class="obs">
+          <div class="ico alt">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v18"/><path d="M6 7h12"/><path d="M6 7l-3 6h6z"/><path d="M18 7l-3 6h6z"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Unusually large "Others" exemption</h3>
+            <p>78.4% of exempted value falls under "Others" — warrants verification.</p>
+          </div>
+        </div>
+
+        <div class="obs">
+          <div class="ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h6"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Barangay-level data quality issue</h3>
+            <p>Lamao's reported AV alone exceeds the municipal taxable total.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 · RECOMMENDATIONS ============ -->
+  <section class="slide" data-title="Recommendations">
+    <div class="slide-inner">
+      <div class="slide-head">
+        <div class="rule"></div>
+        <h2>Recommendations</h2>
+        <p class="sub">Priority actions for the next reporting cycle</p>
+      </div>
+
+      <div class="rec-list">
+        <div class="rec">
+          <div class="num">1</div>
+          <p>Investigate and verify the <strong>"Others" exemption category</strong> (₱13.15B, 78.4% of exemptions) to confirm proper classification.</p>
+        </div>
+        <div class="rec">
+          <div class="num">2</div>
+          <p>Reconcile <strong>barangay-level assessed values</strong> against the municipal total, with priority on Barangay Lamao.</p>
+        </div>
+        <div class="rec">
+          <div class="num">3</div>
+          <p>Monitor <strong>industrial asset reassessment and depreciation cycles</strong> closely, given 97%+ concentration risk.</p>
+        </div>
+        <div class="rec">
+          <div class="num">4</div>
+          <p>Explore <strong>diversification incentives</strong> (residential, commercial) to reduce dependence on industrial valuation swings.</p>
+        </div>
+        <div class="rec">
+          <div class="num">5</div>
+          <p>Conduct a <strong>year-over-year variance analysis</strong> of the 2024–2025 declines to inform forecasting and budget planning.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 · CONCLUSION ============ -->
+  <section class="slide" data-title="Conclusion">
+    <div class="slide-inner">
+      <div class="concl">
+        <div class="eyebrow">Conclusion</div>
+        <p class="quote">High value, high concentration, <em>high scrutiny needed.</em></p>
+        <p>
+          Limay is Bataan's most valuable industrial tax base, nearly on par with Mariveles, but its assessed
+          value is highly volatile and heavily concentrated in industrial assets — with unresolved data-quality
+          flags in both exemption reporting and barangay-level figures.
+        </p>
+        <div class="pill-row">
+          <span class="pill">₱77.06B Taxable AV</span>
+          <span class="pill">2nd in Bataan</span>
+          <span class="pill">97.3% Industrial</span>
+          <span class="pill">−5.1% Net Change</span>
+          <span class="pill">Reconciliation Required</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<nav class="nav">
+  <div class="nav-title" id="slideTitle"></div>
+  <div class="dots" id="dots"></div>
+  <div class="nav-btns">
+    <button class="nav-btn" id="prevBtn" aria-label="Previous slide">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button class="nav-btn" id="nextBtn" aria-label="Next slide">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <span class="counter" id="counter">1 / 11</span>
+  </div>
+</nav>
+
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsWrap = document.getElementById('dots');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const progressFill = document.getElementById('progressFill');
+  const counter = document.getElementById('counter');
+  const slideTitle = document.getElementById('slideTitle');
+  const deck = document.getElementById('deck');
+
+  let current = 0;
+
+  /* ---- build dots ---- */
+  slides.forEach(function (s, k) {
+    const b = document.createElement('button');
+    b.className = 'dot';
+    b.type = 'button';
+    b.setAttribute('aria-label', 'Go to slide ' + (k + 1));
+    b.addEventListener('click', function () { go(k); });
+    dotsWrap.appendChild(b);
+  });
+  const dots = Array.from(dotsWrap.children);
+
+  /* ---- counter animation ---- */
+  function animateCounters(slide) {
+    slide.querySelectorAll('[data-count]').forEach(function (el) {
+      const target = parseFloat(el.dataset.count);
+      const dec = parseInt(el.dataset.decimals || '0', 10);
+      const prefix = el.dataset.prefix || '';
+      const suffix = el.dataset.suffix || '';
+      const dur = 950;
+      const start = performance.now();
+
+      if (el._raf) cancelAnimationFrame(el._raf);
+
+      function tick(t) {
+        const p = Math.min(1, (t - start) / dur);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const v = target * eased;
+        el.textContent = prefix + v.toFixed(dec) + suffix;
+        if (p < 1) el._raf = requestAnimationFrame(tick);
+      }
+      el._raf = requestAnimationFrame(tick);
+    });
+  }
+
+  /* ---- render ---- */
+  function update() {
+    dots.forEach(function (d, k) { d.classList.toggle('active', k === current); });
+    const pct = slides.length > 1 ? (current / (slides.length - 1)) * 100 : 0;
+    progressFill.style.width = pct + '%';
+    counter.textContent = (current + 1) + ' / ' + slides.length;
+    slideTitle.textContent = slides[current].dataset.title || '';
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === slides.length - 1;
+  }
+
+  function go(n) {
+    n = Math.max(0, Math.min(slides.length - 1, n));
+    if (n === current) return;
+    slides[current].classList.remove('active');
+    current = n;
+    const s = slides[current];
+    s.classList.add('active');
+    s.scrollTop = 0;
+    update();
+    animateCounters(s);
+  }
+
+  /* ---- buttons ---- */
+  prevBtn.addEventListener('click', function () { go(current - 1); });
+  nextBtn.addEventListener('click', function () { go(current + 1); });
+
+  /* ---- keyboard ---- */
+  document.addEventListener('keydown', function (e) {
+    const k = e.key;
+    if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || k === ' ' || k === 'Enter') {
+      e.preventDefault(); go(current + 1);
+    } else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp') {
+      e.preventDefault(); go(current - 1);
+    } else if (k === 'Home') {
+      e.preventDefault(); go(0);
+    } else if (k === 'End') {
+      e.preventDefault(); go(slides.length - 1);
+    }
+  });
+
+  /* ---- touch swipe ---- */
+  let touchX = 0, touchY = 0, tracking = false;
+  deck.addEventListener('touchstart', function (e) {
+    const t = e.changedTouches[0];
+    touchX = t.clientX; touchY = t.clientY; tracking = true;
+  }, { passive: true });
+
+  deck.addEventListener('touchend', function (e) {
+    if (!tracking) return;
+    tracking = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchX;
+    const dy = t.clientY - touchY;
+    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+      go(dx < 0 ? current + 1 : current - 1);
+    }
+  }, { passive: true });
+
+  /* ---- wheel (throttled, only when slide can't scroll) ---- */
+  let wheelLock = false;
+  deck.addEventListener('wheel', function (e) {
+    const s = slides[current];
+    const atTop = s.scrollTop <= 0;
+    const atBottom = s.scrollTop + s.clientHeight >= s.scrollHeight - 2;
+    const goingDown = e.deltaY > 0;
+
+    if ((goingDown && atBottom) || (!goingDown && atTop)) {
+      if (wheelLock) return;
+      if (Math.abs(e.deltaY) < 12) return;
+      wheelLock = true;
+      setTimeout(function () { wheelLock = false; }, 750);
+      go(goingDown ? current + 1 : current - 1);
+    }
+  }, { passive: true });
+
+  /* ---- init ---- */
+  update();
+  animateCounters(slides[0]);
+})();
+</script>
+
+</body>
+</html>
