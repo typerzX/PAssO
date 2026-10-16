@@ -50,8 +50,10 @@
   --ease-cine:cubic-bezier(.22,.61,.36,1);
   --ease-out:cubic-bezier(.16,.84,.44,1);
   --ease-spring:cubic-bezier(.2,1.4,.4,1);
-  --ease-enter:cubic-bezier(.16,1,.3,1);
-  --ease-exit:cubic-bezier(.55,0,.55,.2);
+
+  /* Uniform transition duration — shared by CSS and JS */
+  --tt:820ms;
+  --tt-ease:cubic-bezier(.65,0,.35,1);
 }
 
 html,body{
@@ -359,171 +361,58 @@ body.booted .boot-veil{opacity:0;}
 }
 
 /* ============================================================
-   DECK & SLIDES — MULTI-TRANSITION SYSTEM
+   DECK & SLIDES
+   SMOOTH UNIFORM SLIDE + FADE
+   - Forward nav: outgoing slides left, incoming from right
+   - Backward nav: outgoing slides right, incoming from left
+   - Same easing & duration on every page change
 ============================================================ */
 .deck{
   position:relative;z-index:5;overflow:hidden;min-height:0;
-  perspective:2200px;
 }
 
 .slide{
   position:absolute;inset:0;display:none;
   padding:var(--pad-y) var(--pad-x);
   overflow:hidden;
-  will-change:transform,opacity,filter;
-  transform-style:preserve-3d;
+  will-change:transform,opacity;
   backface-visibility:hidden;
-  transform-origin:center center;
+  transform:translate3d(0,0,0);
 }
-
 .slide.active{display:block;}
-.slide.leaving{display:block;pointer-events:none;z-index:1;}
-.slide.entering{display:block;z-index:2;}
 
-/* ---------- TRANSITION 1: BLUR CROSSFADE ---------- */
-.slide.t-blur.leaving{animation:tBlurOut .65s var(--ease-exit) forwards;}
-.slide.t-blur.entering{animation:tBlurIn .7s var(--ease-enter) forwards;}
-@keyframes tBlurOut{
-  0%{opacity:1;transform:scale(1);filter:blur(0);}
-  100%{opacity:0;transform:scale(.965);filter:blur(8px);}
-}
-@keyframes tBlurIn{
-  0%{opacity:0;transform:scale(1.03);filter:blur(8px);}
-  100%{opacity:1;transform:scale(1);filter:blur(0);}
+.slide.leaving,
+.slide.entering{
+  display:block;pointer-events:none;
+  will-change:transform,opacity;
 }
 
-/* ---------- TRANSITION 2: VERTICAL ROLL ---------- */
-.slide.t-roll.leaving{animation:tRollOutUp .7s var(--ease-exit) forwards;}
-.slide.t-roll.entering{animation:tRollInUp .75s var(--ease-enter) forwards;}
-.slide.t-roll.reverse.leaving{animation:tRollOutDown .7s var(--ease-exit) forwards;}
-.slide.t-roll.reverse.entering{animation:tRollInDown .75s var(--ease-enter) forwards;}
-@keyframes tRollOutUp{
-  0%{opacity:1;transform:translateY(0);filter:blur(0);}
-  100%{opacity:0;transform:translateY(-9%) scale(.97);filter:blur(4px);}
+/* Outgoing slide */
+.slide.leaving{
+  z-index:1;
+  animation:slideExit var(--tt) var(--tt-ease) forwards;
 }
-@keyframes tRollInUp{
-  0%{opacity:0;transform:translateY(9%) scale(.97);filter:blur(4px);}
-  100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0);}
-}
-@keyframes tRollOutDown{
-  0%{opacity:1;transform:translateY(0);filter:blur(0);}
-  100%{opacity:0;transform:translateY(9%) scale(.97);filter:blur(4px);}
-}
-@keyframes tRollInDown{
-  0%{opacity:0;transform:translateY(-9%) scale(.97);filter:blur(4px);}
-  100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0);}
+/* Incoming slide */
+.slide.entering{
+  z-index:2;
+  animation:slideEnter var(--tt) var(--tt-ease) forwards;
 }
 
-/* ---------- TRANSITION 3: PERSPECTIVE FLIP ---------- */
-.slide.t-flip.leaving{animation:tFlipOut .8s var(--ease-exit) forwards;}
-.slide.t-flip.entering{animation:tFlipIn .85s var(--ease-enter) forwards;}
-.slide.t-flip.reverse.leaving{animation:tFlipOutRev .8s var(--ease-exit) forwards;}
-.slide.t-flip.reverse.entering{animation:tFlipInRev .85s var(--ease-enter) forwards;}
-@keyframes tFlipOut{
-  0%{opacity:1;transform:perspective(2000px) rotateY(0) translateX(0);}
-  100%{opacity:0;transform:perspective(2000px) rotateY(-38deg) translateX(-16%);}
-}
-@keyframes tFlipIn{
-  0%{opacity:0;transform:perspective(2000px) rotateY(38deg) translateX(16%);}
-  100%{opacity:1;transform:perspective(2000px) rotateY(0) translateX(0);}
-}
-@keyframes tFlipOutRev{
-  0%{opacity:1;transform:perspective(2000px) rotateY(0) translateX(0);}
-  100%{opacity:0;transform:perspective(2000px) rotateY(38deg) translateX(16%);}
-}
-@keyframes tFlipInRev{
-  0%{opacity:0;transform:perspective(2000px) rotateY(-38deg) translateX(-16%);}
-  100%{opacity:1;transform:perspective(2000px) rotateY(0) translateX(0);}
-}
+/* Direction: forward (next) — outgoing goes left, incoming comes from right */
+.slide.leaving.dir-forward  { --exit-x: -100%; }
+.slide.entering.dir-forward { --enter-x: 100%; }
 
-/* ---------- TRANSITION 4: ZOOM BLUR ---------- */
-.slide.t-zoom.leaving{animation:tZoomOut .7s var(--ease-exit) forwards;}
-.slide.t-zoom.entering{animation:tZoomIn .75s var(--ease-enter) forwards;}
-@keyframes tZoomOut{
-  0%{opacity:1;transform:scale(1);filter:blur(0);}
-  100%{opacity:0;transform:scale(1.14);filter:blur(14px);}
-}
-@keyframes tZoomIn{
-  0%{opacity:0;transform:scale(.86);filter:blur(14px);}
-  100%{opacity:1;transform:scale(1);filter:blur(0);}
-}
+/* Direction: backward (prev) — outgoing goes right, incoming comes from left */
+.slide.leaving.dir-backward  { --exit-x: 100%; }
+.slide.entering.dir-backward { --enter-x: -100%; }
 
-/* ---------- TRANSITION 5: DIAGONAL PUSH ---------- */
-.slide.t-diag.leaving{animation:tDiagOut .75s var(--ease-exit) forwards;}
-.slide.t-diag.entering{animation:tDiagIn .8s var(--ease-enter) forwards;}
-.slide.t-diag.reverse.leaving{animation:tDiagOutRev .75s var(--ease-exit) forwards;}
-.slide.t-diag.reverse.entering{animation:tDiagInRev .8s var(--ease-enter) forwards;}
-@keyframes tDiagOut{
-  0%{opacity:1;transform:translate(0,0) scale(1);filter:blur(0);}
-  100%{opacity:0;transform:translate(-11%,-9%) scale(.95);filter:blur(6px);}
+@keyframes slideExit{
+  0%   { opacity: 1; transform: translate3d(0,0,0); }
+  100% { opacity: 0; transform: translate3d(var(--exit-x, -100%), 0, 0); }
 }
-@keyframes tDiagIn{
-  0%{opacity:0;transform:translate(11%,9%) scale(.95);filter:blur(6px);}
-  100%{opacity:1;transform:translate(0,0) scale(1);filter:blur(0);}
-}
-@keyframes tDiagOutRev{
-  0%{opacity:1;transform:translate(0,0) scale(1);filter:blur(0);}
-  100%{opacity:0;transform:translate(11%,9%) scale(.95);filter:blur(6px);}
-}
-@keyframes tDiagInRev{
-  0%{opacity:0;transform:translate(-11%,-9%) scale(.95);filter:blur(6px);}
-  100%{opacity:1;transform:translate(0,0) scale(1);filter:blur(0);}
-}
-
-/* ---------- TRANSITION 6: SCALE MORPH (card shrink) ---------- */
-.slide.t-morph.leaving{animation:tMorphOut .75s var(--ease-exit) forwards;}
-.slide.t-morph.entering{animation:tMorphIn .8s var(--ease-enter) forwards;}
-@keyframes tMorphOut{
-  0%{opacity:1;transform:scale(1);border-radius:0;filter:blur(0);}
-  100%{opacity:0;transform:scale(.55);border-radius:24px;filter:blur(6px);}
-}
-@keyframes tMorphIn{
-  0%{opacity:0;transform:scale(1.35);border-radius:24px;filter:blur(6px);}
-  100%{opacity:1;transform:scale(1);border-radius:0;filter:blur(0);}
-}
-
-/* ---------- TRANSITION 7: HORIZONTAL PARALLAX ---------- */
-.slide.t-slide.leaving{animation:tSlideOut .75s var(--ease-exit) forwards;}
-.slide.t-slide.entering{animation:tSlideIn .8s var(--ease-enter) forwards;}
-.slide.t-slide.reverse.leaving{animation:tSlideOutRev .75s var(--ease-exit) forwards;}
-.slide.t-slide.reverse.entering{animation:tSlideInRev .8s var(--ease-enter) forwards;}
-@keyframes tSlideOut{
-  0%{opacity:1;transform:translateX(0) scale(1);filter:blur(0);}
-  100%{opacity:0;transform:translateX(-45%) scale(.92);filter:blur(10px);}
-}
-@keyframes tSlideIn{
-  0%{opacity:0;transform:translateX(45%) scale(.92);filter:blur(10px);}
-  100%{opacity:1;transform:translateX(0) scale(1);filter:blur(0);}
-}
-@keyframes tSlideOutRev{
-  0%{opacity:1;transform:translateX(0) scale(1);filter:blur(0);}
-  100%{opacity:0;transform:translateX(45%) scale(.92);filter:blur(10px);}
-}
-@keyframes tSlideInRev{
-  0%{opacity:0;transform:translateX(-45%) scale(.92);filter:blur(10px);}
-  100%{opacity:1;transform:translateX(0) scale(1);filter:blur(0);}
-}
-
-/* ---------- TRANSITION 8: PIVOT / TILT ---------- */
-.slide.t-tilt.leaving{animation:tTiltOut .75s var(--ease-exit) forwards;}
-.slide.t-tilt.entering{animation:tTiltIn .8s var(--ease-enter) forwards;}
-.slide.t-tilt.reverse.leaving{animation:tTiltOutRev .75s var(--ease-exit) forwards;}
-.slide.t-tilt.reverse.entering{animation:tTiltInRev .8s var(--ease-enter) forwards;}
-@keyframes tTiltOut{
-  0%{opacity:1;transform:rotate(0) scale(1);filter:blur(0);}
-  100%{opacity:0;transform:rotate(-4deg) scale(.9);filter:blur(6px);}
-}
-@keyframes tTiltIn{
-  0%{opacity:0;transform:rotate(4deg) scale(.9);filter:blur(6px);}
-  100%{opacity:1;transform:rotate(0) scale(1);filter:blur(0);}
-}
-@keyframes tTiltOutRev{
-  0%{opacity:1;transform:rotate(0) scale(1);filter:blur(0);}
-  100%{opacity:0;transform:rotate(4deg) scale(.9);filter:blur(6px);}
-}
-@keyframes tTiltInRev{
-  0%{opacity:0;transform:rotate(-4deg) scale(.9);filter:blur(6px);}
-  100%{opacity:1;transform:rotate(0) scale(1);filter:blur(0);}
+@keyframes slideEnter{
+  0%   { opacity: 0; transform: translate3d(var(--enter-x, 100%), 0, 0); }
+  100% { opacity: 1; transform: translate3d(0,0,0); }
 }
 
 .slide-inner{
@@ -937,17 +826,6 @@ tr.total td:first-child{color:var(--accent-bright);letter-spacing:.1em;}
   letter-spacing:.06em;text-transform:uppercase;
 }
 .title-meta strong{color:var(--dust-2);font-weight:600;display:inline-block;min-width:110px;}
-.title-hint{
-  margin-top:clamp(22px,3vh,36px);
-  font-family:var(--mono);font-size:10.5px;color:var(--dust-4);
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-  letter-spacing:.14em;text-transform:uppercase;
-}
-.title-hint kbd{
-  background:rgba(126,184,212,.06);border:1px solid var(--line-3);
-  border-radius:2px;padding:4px 9px;
-  font-size:10px;font-family:inherit;font-weight:600;color:var(--accent-bright);
-}
 .title-visual{
   position:relative;aspect-ratio:1;max-width:620px;
   justify-self:end;display:flex;align-items:center;justify-content:center;
@@ -1018,18 +896,6 @@ tr.total td:first-child{color:var(--accent-bright);letter-spacing:.1em;}
 .nav-title::before{
   content:"";width:6px;height:6px;background:var(--accent);
   transform:rotate(45deg);box-shadow:0 0 8px var(--accent);flex:none;
-}
-.nav-title::after{
-  content:attr(data-transition);
-  font-size:8.5px;
-  color:var(--dust-4);
-  letter-spacing:.16em;
-  padding:2px 8px;
-  border:1px solid var(--line-2);
-  border-radius:2px;
-  background:rgba(126,184,212,.04);
-  text-transform:uppercase;
-  white-space:nowrap;
 }
 
 /* ============================================================
@@ -1184,11 +1050,11 @@ body.booted .dot{
 }
 
 /* ============================================================
-   CONTENT ENTRANCE (staggered inner reveals)
+   CONTENT ENTRANCE
 ============================================================ */
 .slide.entering .kpi{
   animation:kpiBounceIn .85s cubic-bezier(.2,1.6,.4,1) both;
-  animation-delay:calc(.3s + var(--i, 0) * .08s);
+  animation-delay:calc(.42s + var(--i, 0) * .08s);
 }
 @keyframes kpiBounceIn{
   0%{opacity:0;transform:translateY(28px) scale(.94);}
@@ -1197,7 +1063,7 @@ body.booted .dot{
 }
 .slide.entering .kpi .icon{
   animation:iconWiggle .8s cubic-bezier(.2,1.6,.4,1) both;
-  animation-delay:calc(.6s + var(--i, 0) * .08s);
+  animation-delay:calc(.72s + var(--i, 0) * .08s);
 }
 @keyframes iconWiggle{
   0%{transform:scale(0) rotate(-180deg);}
@@ -1207,7 +1073,7 @@ body.booted .dot{
 }
 .slide.entering .stat{
   animation:statPop .7s cubic-bezier(.2,1.6,.4,1) both;
-  animation-delay:calc(.45s + var(--i, 0) * .1s);
+  animation-delay:calc(.55s + var(--i, 0) * .1s);
 }
 @keyframes statPop{
   0%{opacity:0;transform:scale(.7);}
@@ -1216,7 +1082,7 @@ body.booted .dot{
 }
 .slide.entering .obs{
   animation:obsSlideIn .8s cubic-bezier(.2,1.4,.4,1) both;
-  animation-delay:calc(.35s + var(--i, 0) * .09s);
+  animation-delay:calc(.45s + var(--i, 0) * .09s);
 }
 @keyframes obsSlideIn{
   0%{opacity:0;transform:translateY(28px) rotate(-3deg);}
@@ -1225,7 +1091,7 @@ body.booted .dot{
 }
 .slide.entering .rec{
   animation:recSlideIn .75s cubic-bezier(.2,1.2,.4,1) both;
-  animation-delay:calc(.32s + var(--i, 0) * .08s);
+  animation-delay:calc(.42s + var(--i, 0) * .08s);
 }
 @keyframes recSlideIn{
   0%{opacity:0;transform:translateX(-40px);}
@@ -1234,11 +1100,165 @@ body.booted .dot{
 }
 .slide.entering .legend-row{
   animation:legendIn .55s cubic-bezier(.2,1.4,.4,1) both;
-  animation-delay:calc(.45s + var(--i, 0) * .07s);
+  animation-delay:calc(.55s + var(--i, 0) * .07s);
 }
 @keyframes legendIn{
   0%{opacity:0;transform:translateX(-24px) scale(.96);}
   100%{opacity:1;transform:translateX(0) scale(1);}
+}
+
+/* ============================================================
+   ★ VOICE-OVER / NARRATION DOCK ★
+============================================================ */
+.voice-dock{
+  position:fixed;
+  right:var(--pad-x);
+  bottom:86px;
+  z-index:45;
+  display:flex;flex-direction:column;align-items:flex-end;gap:10px;
+  font-family:var(--mono);
+  pointer-events:none;
+  transition:opacity .55s var(--ease-cine), transform .55s var(--ease-cine);
+}
+.voice-dock > *{pointer-events:auto;}
+.voice-dock[hidden]{display:none;}
+
+.voice-dock.hide-when-playing{
+  opacity:0;
+  transform:translateX(24px) scale(.96);
+  pointer-events:none;
+}
+.voice-dock.hide-when-playing.near-corner{
+  opacity:1;
+  transform:translateX(0) scale(1);
+  pointer-events:none;
+}
+.voice-dock.hide-when-playing.near-corner > *{pointer-events:auto;}
+
+.voice-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 10px 7px 12px;
+  background:linear-gradient(160deg, rgba(21,42,66,.88), rgba(10,21,36,.96));
+  border:1px solid var(--line-2);border-radius:3px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 20px 40px rgba(3,6,12,.55), 0 1px 0 rgba(219,228,238,.06) inset;
+  transition:border-color .4s var(--ease-cine), box-shadow .4s var(--ease-cine);
+}
+.voice-bar:hover{border-color:var(--line-3);}
+.voice-bar.on{
+  border-color:rgba(126,184,212,.55);
+  box-shadow:0 0 0 1px rgba(126,184,212,.22), 0 20px 40px rgba(3,6,12,.6), 0 0 28px rgba(126,184,212,.22);
+}
+
+.voice-label{
+  font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dust-4);font-weight:600;white-space:nowrap;
+  transition:color .3s ease;min-width:96px;text-align:right;
+}
+.voice-bar.on .voice-label{color:var(--accent-bright);}
+
+.voice-eq{display:flex;align-items:flex-end;gap:2px;height:14px;width:12px;flex:none;}
+.voice-eq i{
+  display:block;width:2px;height:3px;background:var(--dust-5);
+  border-radius:1px;transition:background .3s ease;
+}
+.voice-bar.on .voice-eq i{background:var(--accent);}
+.voice-bar.speaking .voice-eq i{animation:eqBar .9s ease-in-out infinite;background:var(--accent-bright);}
+.voice-bar.speaking .voice-eq i:nth-child(2){animation-delay:.15s;}
+.voice-bar.speaking .voice-eq i:nth-child(3){animation-delay:.3s;}
+@keyframes eqBar{
+  0%,100%{height:3px;}
+  50%{height:14px;}
+}
+
+.voice-btn{
+  width:30px;height:30px;border:1px solid var(--line-3);border-radius:2px;
+  background:rgba(21,42,66,.5);color:var(--dust-2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex:none;
+  transition:all .35s var(--ease-cine);position:relative;overflow:hidden;
+}
+.voice-btn svg{width:14px;height:14px;position:relative;z-index:1;}
+.voice-btn:hover:not(:disabled){
+  border-color:var(--accent);color:var(--accent-bright);
+  box-shadow:0 0 18px rgba(126,184,212,.4);
+}
+.voice-btn:disabled{opacity:.3;cursor:not-allowed;}
+.voice-btn.primary{width:36px;height:36px;}
+.voice-btn.primary svg{width:16px;height:16px;}
+.voice-btn.primary.on{
+  background:var(--accent);border-color:var(--accent);color:var(--bg-0);
+  box-shadow:0 0 22px rgba(126,184,212,.65);
+}
+.voice-btn.clicked{animation:navBtnPulse .5s cubic-bezier(.2,1.6,.4,1);}
+
+.voice-panel{
+  width:min(290px, calc(100vw - 40px));
+  background:linear-gradient(160deg, rgba(15,30,48,.97), rgba(6,13,24,.99));
+  border:1px solid var(--line-3);border-radius:4px;
+  padding:14px 16px;display:flex;flex-direction:column;gap:12px;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  box-shadow:0 30px 60px rgba(3,6,12,.75), 0 0 0 1px rgba(126,184,212,.1);
+}
+.voice-panel[hidden]{display:none;}
+.voice-panel.open{animation:panelIn .38s var(--ease-cine);}
+@keyframes panelIn{
+  0%{opacity:0;transform:translateY(10px) scale(.97);}
+  100%{opacity:1;transform:translateY(0) scale(1);}
+}
+.voice-row{
+  display:flex;align-items:center;gap:10px;
+  font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dust-3);font-weight:600;
+}
+.voice-row > label{flex:none;min-width:74px;}
+.voice-row select{
+  flex:1;min-width:0;
+  background:rgba(21,42,66,.75);border:1px solid var(--line-3);color:var(--dust-1);
+  font-family:var(--mono);font-size:10.5px;padding:5px 6px;border-radius:2px;
+  outline:none;cursor:pointer;
+}
+.voice-row select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(126,184,212,.2);}
+.voice-row input[type=range]{
+  flex:1;min-width:0;-webkit-appearance:none;appearance:none;
+  height:2px;background:var(--line-3);border-radius:2px;outline:none;cursor:pointer;
+}
+.voice-row input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:12px;height:12px;border-radius:50%;
+  background:var(--accent-bright);box-shadow:0 0 10px var(--accent);cursor:pointer;
+}
+.voice-row input[type=range]::-moz-range-thumb{
+  width:12px;height:12px;border:none;border-radius:50%;
+  background:var(--accent-bright);box-shadow:0 0 10px var(--accent);cursor:pointer;
+}
+.voice-val{
+  min-width:42px;text-align:right;color:var(--accent-bright);
+  font-variant-numeric:tabular-nums;letter-spacing:.04em;
+}
+.voice-row.toggle-row{justify-content:space-between;}
+.switch{
+  width:38px;height:20px;border-radius:11px;border:1px solid var(--line-3);
+  background:rgba(21,42,66,.7);position:relative;cursor:pointer;padding:0;
+  transition:all .35s var(--ease-cine);flex:none;
+}
+.switch span{
+  position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+  background:var(--dust-4);transition:all .35s var(--ease-spring);
+}
+.switch[aria-checked="true"]{background:rgba(126,184,212,.25);border-color:var(--accent);}
+.switch[aria-checked="true"] span{left:20px;background:var(--accent-bright);box-shadow:0 0 12px var(--accent);}
+.voice-hint{
+  font-family:var(--sans);font-size:9.5px;letter-spacing:.02em;
+  color:var(--dust-4);line-height:1.65;text-transform:none;
+  border-top:1px solid var(--line-1);padding-top:10px;
+}
+.voice-hint b{color:var(--dust-3);font-weight:600;}
+.voice-hint code{
+  font-family:var(--mono);font-size:9px;color:var(--accent);
+  background:rgba(126,184,212,.08);padding:1px 4px;border-radius:2px;
+}
+
+body.narrating .progress-fill{
+  box-shadow:0 0 12px rgba(126,184,212,.9), 0 0 28px rgba(126,184,212,.55);
 }
 
 /* ============================================================
@@ -1256,6 +1276,8 @@ body.booted .dot{
   .hud .ticker,.hud .coord{display:none;}
   .slide{padding:clamp(16px,2.4vh,24px) clamp(16px,3vw,24px);}
   h1{font-size:clamp(32px,7.5vw,54px);}
+  .voice-dock{bottom:78px;right:16px;}
+  .voice-label{display:none;}
 }
 @media (max-width:620px){
   .kpi-grid{grid-template-columns:1fr;}
@@ -1263,10 +1285,14 @@ body.booted .dot{
   .obs-grid{grid-template-columns:1fr;}
   .dots .dot:nth-child(n+9){display:none;}
   .legend-row .num{display:none;}
+  .voice-btn.restart{display:none;}
 }
 @media (max-width:420px){
   .dots .dot:nth-child(n+7){display:none;}
   .hud{font-size:9px;padding:8px 16px;}
+  .voice-dock{right:10px;}
+  .voice-btn{width:28px;height:28px;}
+  .voice-btn.primary{width:32px;height:32px;}
 }
 
 @media (prefers-reduced-motion:reduce){
@@ -1281,7 +1307,6 @@ body.booted .dot{
     opacity:1 !important;
     transform:none !important;
     filter:none !important;
-    border-radius:0 !important;
   }
   .slide.leaving{display:none !important;}
 }
@@ -1297,7 +1322,6 @@ body.booted .dot{
 <div class="bg-layer bg-lightleak"></div>
 <div class="bg-layer bg-scan"></div>
 
-<!-- Edge-only celebration layers -->
 <div class="edge-bar top" id="edgeBarTop"></div>
 <div class="edge-bar bot" id="edgeBarBot"></div>
 <div class="edge-rail left" id="edgeRailLeft"></div>
@@ -1347,9 +1371,6 @@ body.booted .dot{
             <strong>Source</strong> Real Property Status Report 2026<br>
             <strong>Prepared by</strong> Office of the Municipal Assessor<br>
             <strong>Classification</strong> Public · Fiscal Disclosure
-          </div>
-          <div class="title-hint">
-            <kbd>←</kbd><kbd>→</kbd> navigate &nbsp; <kbd>SPACE</kbd> next &nbsp; <kbd>HOME</kbd> restart &nbsp; swipe on touch
           </div>
         </div>
         <div class="title-visual">
@@ -1840,8 +1861,74 @@ body.booted .dot{
 
 </main>
 
+<!-- VOICE-OVER DOCK -->
+<div class="voice-dock" id="voiceDock">
+  <div class="voice-panel" id="voicePanel" hidden>
+    <div class="voice-row">
+      <label for="voiceSelect">Voice</label>
+      <select id="voiceSelect"></select>
+    </div>
+    <div class="voice-row">
+      <label for="voiceRate">Rate</label>
+      <input type="range" id="voiceRate" min="0.6" max="1.6" step="0.02" value="0.96">
+      <span class="voice-val" id="voiceRateVal">0.96×</span>
+    </div>
+    <div class="voice-row">
+      <label for="voicePitch">Pitch</label>
+      <input type="range" id="voicePitch" min="0.6" max="1.4" step="0.02" value="1">
+      <span class="voice-val" id="voicePitchVal">1.00</span>
+    </div>
+    <div class="voice-row toggle-row">
+      <label for="autoAdvance">Auto-advance</label>
+      <button class="switch" id="autoAdvance" role="switch" aria-checked="true" type="button" aria-label="Auto advance"><span></span></button>
+    </div>
+    <div class="voice-row toggle-row">
+      <label for="autoNarrate">Narrate slides</label>
+      <button class="switch" id="autoNarrate" role="switch" aria-checked="true" type="button" aria-label="Narrate slides"><span></span></button>
+    </div>
+    <div class="voice-hint" id="voiceHint">
+      Uses the Filipino voice from your browser's speech engine.<br>
+      Auto-advance is ON by default — the deck moves on when narration ends.
+    </div>
+  </div>
+
+  <div class="voice-bar" id="voiceBar">
+    <span class="voice-eq" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="voice-label" id="voiceLabel">NARRATION OFF</span>
+
+    <button class="voice-btn restart" id="voiceRestart" type="button" aria-label="Restart narration" title="Restart narration">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 4v5h5"/>
+      </svg>
+    </button>
+
+    <button class="voice-btn" id="voicePause" type="button" aria-label="Pause narration" title="Pause / resume" disabled>
+      <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+        <rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>
+      </svg>
+    </button>
+
+    <button class="voice-btn primary" id="voiceToggle" type="button" aria-label="Toggle voice narration" title="Voice narration on / off">
+      <svg id="speakerIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 5L6 9H3v6h3l5 4V5z"/>
+        <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
+        <path d="M18.5 5.5a9 9 0 0 1 0 13"/>
+      </svg>
+    </button>
+
+    <button class="voice-btn" id="voiceSettings" type="button" aria-label="Voice settings" title="Voice settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 6h16M4 12h16M4 18h16"/>
+        <circle cx="9" cy="6" r="2" fill="var(--bg-1)"/>
+        <circle cx="15" cy="12" r="2" fill="var(--bg-1)"/>
+        <circle cx="7" cy="18" r="2" fill="var(--bg-1)"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
 <nav class="nav">
-  <div class="nav-title" id="slideTitle" data-transition="BLUR">Real Property Status Report</div>
+  <div class="nav-title" id="slideTitle">Real Property Status Report</div>
   <div class="dots" id="dots">
     <div class="dot-indicator" id="dotIndicator" aria-hidden="true">
       <span class="tail left"></span>
@@ -1946,6 +2033,9 @@ body.booted .dot{
 
   counterTotal.textContent = String(total).padStart(2, '0');
 
+  // Must match the CSS --tt value for the transition to feel uniform
+  const TRANSITION_MS = 820;
+
   // Build dots
   slides.forEach(function (_, k) {
     const b = document.createElement('button');
@@ -1962,28 +2052,6 @@ body.booted .dot{
     dotsWrap.appendChild(b);
   });
   const dots = Array.from(dotsWrap.querySelectorAll('.dot'));
-
-  /* ============================================================
-     TRANSITION LIBRARY — 8 styles that cycle
-  ============================================================ */
-  const TRANSITIONS = [
-    { id: 't-blur',  label: 'BLUR',  duration: 720 },
-    { id: 't-roll',  label: 'ROLL',  duration: 780 },
-    { id: 't-flip',  label: 'FLIP',  duration: 850 },
-    { id: 't-zoom',  label: 'ZOOM',  duration: 780 },
-    { id: 't-diag',  label: 'DIAG',  duration: 800 },
-    { id: 't-morph', label: 'MORPH', duration: 800 },
-    { id: 't-slide', label: 'SLIDE', duration: 800 },
-    { id: 't-tilt',  label: 'TILT',  duration: 800 }
-  ];
-  let transitionIndex = 0;
-
-  function getNextTransition() {
-    // Cycle sequentially, but shuffle a bit by direction on the fly
-    const t = TRANSITIONS[transitionIndex % TRANSITIONS.length];
-    transitionIndex = (transitionIndex + 1) % TRANSITIONS.length;
-    return t;
-  }
 
   /* ============================================================
      DOT INDICATOR POSITIONING
@@ -2199,7 +2267,6 @@ body.booted .dot{
     btn.classList.add('clicked');
     setTimeout(() => btn.classList.remove('clicked'), 520);
 
-    // Finale when reaching the last slide
     if (toIndex === total - 1) {
       setTimeout(() => {
         fireAnim(edgeBarTop);
@@ -2280,25 +2347,25 @@ body.booted .dot{
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         bars.forEach(function (bar, i) {
-          const delay = 0.28 + i * 0.065;
+          const delay = 0.5 + i * 0.065;
           bar.style.transition = 'transform 1.1s cubic-bezier(.22,.61,.36,1) ' + delay + 's';
           bar.style.transform = 'scaleX(1)';
         });
         lines.forEach(function (line) {
-          line.style.transition = 'stroke-dashoffset 1.9s cubic-bezier(.22,.61,.36,1) 0.4s';
+          line.style.transition = 'stroke-dashoffset 1.9s cubic-bezier(.22,.61,.36,1) 0.6s';
           line.style.strokeDashoffset = '0';
         });
         areas.forEach(function (area) {
-          area.style.transition = 'opacity 1.2s ease 1.3s';
+          area.style.transition = 'opacity 1.2s ease 1.5s';
           area.style.opacity = '1';
         });
         dots2.forEach(function (dot, i) {
-          const delay = 1.4 + i * 0.11;
+          const delay = 1.6 + i * 0.11;
           dot.style.transition = 'transform .6s cubic-bezier(.2,1.4,.4,1) ' + delay + 's';
           dot.style.transform = 'scale(1)';
         });
         donuts.forEach(function (seg, i) {
-          const delay = 0.4 + i * 0.11;
+          const delay = 0.6 + i * 0.11;
           seg.style.transition = 'opacity .95s cubic-bezier(.22,.61,.36,1) ' + delay + 's';
           seg.style.opacity = '1';
         });
@@ -2364,7 +2431,10 @@ body.booted .dot{
   }
 
   /* ============================================================
-     GO — pick a transition, apply it, orchestrate everything
+     GO — SMOOTH UNIFORM SLIDE + FADE TRANSITION
+     Every page change uses the same easing and duration.
+     Forward nav: content slides left, new slide comes from right.
+     Backward nav: content slides right, new slide comes from left.
   ============================================================ */
   function go(n) {
     n = Math.max(0, Math.min(total - 1, n));
@@ -2374,72 +2444,723 @@ body.booted .dot{
     const fromIndex = current;
     const toIndex = n;
     const isForward = toIndex > fromIndex;
-    const reverse = !isForward;
 
-    const transition = getNextTransition();
     const fromSlide = slides[fromIndex];
     const toSlide = slides[toIndex];
 
     isTransitioning = true;
 
-    // Reset any lingering transition classes on both slides
-    [fromSlide, toSlide].forEach(function (s) {
-      s.classList.remove(
-        'leaving', 'entering', 'reverse',
-        't-blur', 't-roll', 't-flip', 't-zoom',
-        't-diag', 't-morph', 't-slide', 't-tilt'
-      );
+    // Clean any lingering state from previous transitions
+    slides.forEach(function (s) {
+      s.classList.remove('leaving', 'entering', 'dir-forward', 'dir-backward');
     });
 
-    // Assign this transition's class to both
-    fromSlide.classList.add(transition.id);
-    toSlide.classList.add(transition.id);
-    if (reverse) {
-      fromSlide.classList.add('reverse');
-      toSlide.classList.add('reverse');
-    }
+    // Set direction classes based on navigation
+    const dirClass = isForward ? 'dir-forward' : 'dir-backward';
 
-    // Kick off exit / enter
+    // Kick off the outgoing slide
     fromSlide.classList.remove('active');
-    fromSlide.classList.add('leaving');
+    fromSlide.classList.add('leaving', dirClass);
 
+    // Prepare and kick off the incoming slide
     toSlide.scrollTop = 0;
     void toSlide.offsetWidth;
-    toSlide.classList.add('entering');
+    toSlide.classList.add('entering', dirClass);
 
-    // Reset inner SVG states for the new slide
+    // Reset inner SVG animations on the incoming slide
     enterSlide(toSlide);
 
-    // Update state
+    // Update state, chrome, counters, dots, celebration, narration
     current = toIndex;
     updateChrome();
     animateCounters(toSlide);
     animateDotTransition(fromIndex, toIndex);
-
-    // Edge celebration
     fireEdgeCelebration(fromIndex, toIndex, isForward);
+    Narrator.onSlideChange(toIndex, toSlide);
 
-    // Update the transition label in the nav title
-    slideTitle.setAttribute('data-transition', transition.label);
-
-    // Finalize
+    // Finalize after the uniform transition duration
     setTimeout(function () {
-      [fromSlide, toSlide].forEach(function (s) {
-        s.classList.remove(
-          'leaving', 'entering', 'reverse',
-          't-blur', 't-roll', 't-flip', 't-zoom',
-          't-diag', 't-morph', 't-slide', 't-tilt'
-        );
-      });
+      fromSlide.classList.remove('leaving', 'dir-forward', 'dir-backward');
+      toSlide.classList.remove('entering', 'dir-forward', 'dir-backward');
       toSlide.classList.add('active');
+
+      // Ensure the outgoing slide is fully hidden
+      fromSlide.style.transform = '';
+      fromSlide.style.opacity = '';
+
       isTransitioning = false;
+
       if (pendingNav !== null) {
         const p = pendingNav;
         pendingNav = null;
         setTimeout(function () { go(p); }, 80);
       }
-    }, transition.duration);
+    }, TRANSITION_MS);
   }
+
+  /* ============================================================
+     ★★★  VOICE-OVER NARRATION ENGINE  ★★★
+  ============================================================ */
+
+  /* ---- Filipino pronunciation dictionary ---- */
+  const PRONUNCIATION = {
+    'Limay': 'Lee-my',
+    'Bataan': 'Ba-ta-an',
+    'Mariveles': 'Ma-ri-ve-les',
+    'Lamao': 'La-ma-o',
+    'Kitang': 'Ki-tang',
+    'Alangan': 'A-la-ngan',
+    'Duale': 'Du-a-le',
+    'Reformista': 'Re-for-mis-ta',
+    'Poblacion': 'Po-bla-syon',
+    'Townsite': 'Town-site',
+    'Wawa': 'Wa-wa',
+    'Landing': 'Lan-ding',
+    'Orani': 'O-ra-ni',
+    'Orion': 'O-ri-on',
+    'Bagac': 'Ba-gak',
+    'Samal': 'Sa-mal',
+    'Abucay': 'A-bu-kay',
+    'Hermosa': 'Her-mo-sa',
+    'Dinalupihan': 'Di-na-lu-pi-han',
+    'Morong': 'Mo-rong',
+    'Pilar': 'Pi-lar',
+    'barangay': 'ba-rang-gay',
+    'barangays': 'ba-rang-gays',
+    'Pilipinas': 'Pi-li-pi-nas',
+    'assessor': 'a-se-sor',
+    'municipal': 'mu-ni-si-pal',
+    'municipality': 'mu-ni-si-pa-li-ty',
+    'municipalities': 'mu-ni-si-pa-li-ties'
+  };
+
+  /* ---- Narration scripts ---- */
+  const NARRATION = [
+    "Real Property Status Report. Office of the Municipal Assessor, Limay, Bataan. " +
+    "Second Quarter, Fiscal Year 2026. " +
+    "This is a comprehensive analysis of the Limay real property tax base — " +
+    "a data study of the municipality's industrial backbone, its fiscal volatility, and its structural concentration.",
+
+    "Chapter One. Executive Summary. " +
+    "Limay's total taxable assessed value stands at 77.06 billion pesos, " +
+    "ranking second among the eleven municipalities of Bataan. " +
+    "Industrial property accounts for 97.3 percent of that taxable base. " +
+    "The net change from 2021 to the second quarter of 2026 is a decline of 5.1 percent. " +
+    "Peak value reached 94.42 billion pesos in 2023, while exempted property totals 16.77 billion pesos — " +
+    "or 17.9 percent of combined assessed value. " +
+    "After peaking in 2023, assessed value fell for two consecutive years before stabilizing in the second quarter of 2026 — " +
+    "a pattern tied closely to industrial asset reassessment.",
+
+    "Chapter Two. Provincial Ranking. " +
+    "Limay ranks second in Bataan with 77.06 billion pesos in assessed value, " +
+    "trailing only Mariveles at approximately 88 billion. " +
+    "Together, the two municipalities account for roughly 81 percent of the province's combined tax base, " +
+    "dwarfing every other municipality. " +
+    "Unlike Mariveles' broader property mix, Limay's assessed value is driven almost entirely by industrial assets.",
+
+    "Chapter Three. Historical Trend. " +
+    "Assessed value climbed from 2021 to a peak of 94.42 billion pesos in 2023, " +
+    "then declined for two consecutive years before leveling off in the second quarter of 2026. " +
+    "The net change from 2021 to the second quarter of 2026 is a decline of 5.1 percent.",
+
+    "Chapter Four. Property Mix by Classification. " +
+    "Industrial property carries 97.26 percent of the taxable base, at 74.95 billion pesos. " +
+    "Residential accounts for 1.86 percent, commercial for 0.40 percent, and agricultural for 0.38 percent. " +
+    "Combined, residential, commercial, and agricultural amount to less than 2.7 percent of the total. " +
+    "A single classification carries almost the entire tax base.",
+
+    "Chapter Five. Real Property Units Inventory. " +
+    "There are 25,517 recorded property units in total. " +
+    "23,762 units, or 93.1 percent, are taxable, carrying 82.1 percent of combined assessed value. " +
+    "1,755 units are exempted — just 6.9 percent of the count, but holding nearly 18 percent of the combined value. " +
+    "Roughly one in fourteen recorded property units is exempted.",
+
+    "Chapter Six. Exempted Properties Breakdown. " +
+    "Of the 16.77 billion pesos in exempted value, the Others category dominates at 13.15 billion — 78.4 percent. " +
+    "Government properties follow at 2.43 billion, or 14.5 percent, " +
+    "and pollution control devices at 1.03 billion, or 6.1 percent. " +
+    "The unusually large Others category warrants verification.",
+
+    "Chapter Seven. Current Situation per Barangay. " +
+    "Barangay Lamao dominates with a reported assessed value of 88.15 billion pesos — " +
+    "which by itself exceeds the municipal taxable total of 77.06 billion. " +
+    "The sum of all twelve barangays, approximately 95.54 billion pesos, also exceeds that total. " +
+    "A data quality flag is raised. Reconciliation is strongly recommended.",
+
+    "Chapter Eight. Key Observations. " +
+    "First: Limay is at near-parity with the top-ranked municipality in the province. " +
+    "Second: the trend shows boom, bust, then stabilization. " +
+    "Third: industrial concentration is extreme, at 97.3 percent of taxable assessed value. " +
+    "Fourth: the Others exemption category is unusually large and needs verification. " +
+    "And fifth: barangay-level data quality issues remain unresolved.",
+
+    "Chapter Nine. Recommendations. " +
+    "One: investigate and verify the Others exemption category, worth 13.15 billion pesos. " +
+    "Two: reconcile barangay-level assessed values against the municipal total, prioritizing Barangay Lamao. " +
+    "Three: monitor industrial asset reassessment and depreciation cycles closely, given the concentration risk. " +
+    "Four: explore diversification incentives for residential and commercial property. " +
+    "And five: conduct a year-over-year variance analysis of the 2024 to 2025 declines.",
+
+    "Conclusion. High value. High concentration. High scrutiny needed. " +
+    "Limay is Bataan's most valuable industrial tax base, nearly on par with Mariveles — " +
+    "but its assessed value is highly volatile, heavily concentrated in industrial assets, " +
+    "and carries unresolved data-quality flags in both exemption reporting and barangay-level figures."
+  ];
+
+  const Narrator = (function () {
+    const synth = ('speechSynthesis' in window) ? window.speechSynthesis : null;
+    const supported = !!synth;
+
+    const dock       = document.getElementById('voiceDock');
+    const bar        = document.getElementById('voiceBar');
+    const label      = document.getElementById('voiceLabel');
+    const panel      = document.getElementById('voicePanel');
+    const toggleBtn  = document.getElementById('voiceToggle');
+    const pauseBtn   = document.getElementById('voicePause');
+    const restartBtn = document.getElementById('voiceRestart');
+    const settingsBtn= document.getElementById('voiceSettings');
+    const speakerIcon= document.getElementById('speakerIcon');
+    const pauseIcon  = document.getElementById('pauseIcon');
+    const selVoice   = document.getElementById('voiceSelect');
+    const rateInput  = document.getElementById('voiceRate');
+    const rateVal    = document.getElementById('voiceRateVal');
+    const pitchInput = document.getElementById('voicePitch');
+    const pitchVal   = document.getElementById('voicePitchVal');
+    const autoAdvSw  = document.getElementById('autoAdvance');
+    const autoNarrSw = document.getElementById('autoNarrate');
+
+    let voices = [];
+    let voice = null;
+    let rate = 0.96;
+    let pitch = 1;
+    let volume = 1;
+
+    let armed = false;
+    let paused = false;
+    let speaking = false;
+    let autoAdvance = true;
+    let narrateEach = true;
+
+    let chunkList = [];
+    let chunkIdx = 0;
+    let token = 0;
+    let audioEl = null;
+    let currentText = '';
+    let completeCb = null;
+    let completeCbExternal = null;
+
+    const SVG_ON = '<path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>';
+    const SVG_OFF= '<path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M16 9.5l5 5"/><path d="M21 9.5l-5 5"/>';
+    const SVG_PAUSE = '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>';
+    const SVG_PLAY  = '<path d="M7 4.5l12 7.5-12 7.5z"/>';
+
+    function applyPronunciation(text) {
+      let result = text;
+      const keys = Object.keys(PRONUNCIATION).sort((a, b) => b.length - a.length);
+      keys.forEach(function (key) {
+        const replacement = PRONUNCIATION[key];
+        const regex = new RegExp('\\b' + key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+        result = result.replace(regex, replacement);
+      });
+      return result;
+    }
+
+    function splitSentences(text) {
+      const out = [];
+      let buf = '';
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        buf += ch;
+        if (ch === '.' || ch === '!' || ch === '?') {
+          const next = text[i + 1];
+          if (next === undefined || /\s/.test(next)) {
+            const s = buf.trim();
+            if (s) out.push(s);
+            buf = '';
+          }
+        }
+      }
+      const tail = buf.trim();
+      if (tail) out.push(tail);
+      return out;
+    }
+    function chunkText(text, max) {
+      max = max || 220;
+      const sentences = splitSentences(text);
+      const chunks = [];
+      let cur = '';
+      sentences.forEach(function (s) {
+        if (!cur) { cur = s; }
+        else if ((cur + ' ' + s).length <= max) { cur += ' ' + s; }
+        else { chunks.push(cur); cur = s; }
+      });
+      if (cur) chunks.push(cur);
+      return chunks;
+    }
+
+    function isFilipinoVoice(v) {
+      if (!v) return false;
+      const lang = (v.lang || '').toLowerCase();
+      const name = (v.name || '').toLowerCase();
+      if (/^(fil|tl|en)[-_]ph$/i.test(v.lang || '')) return true;
+      if (/^(fil|tl)([-_]|$)/i.test(lang)) return true;
+      if (/filipino|tagalog|philippines/i.test(name)) return true;
+      return false;
+    }
+
+    function pickFilipinoVoice() {
+      let v = voices.find(isFilipinoVoice);
+      if (v) return v;
+      v = voices.find(x => /philippines/i.test(x.name || ''));
+      if (v) return v;
+      v = voices.find(x => /google filipino/i.test(x.name || ''));
+      if (v) return v;
+      v = voices.find(x => /^(fil|tl)/i.test(x.lang || ''));
+      if (v) return v;
+      return null;
+    }
+
+    function refreshVoices() {
+      if (!supported) return;
+      voices = synth.getVoices() || [];
+      if (!voices.length) return;
+
+      const filipino = pickFilipinoVoice();
+      if (filipino) {
+        voice = filipino;
+      } else if (!voice) {
+        voice = voices.find(v => /^en[-_]/i.test(v.lang)) || voices[0];
+      }
+      buildVoiceSelect();
+    }
+
+    function buildVoiceSelect() {
+      if (!selVoice) return;
+      selVoice.innerHTML = '';
+      const filipinoVoices = voices.filter(isFilipinoVoice);
+      const list = filipinoVoices.length ? filipinoVoices : (voice ? [voice] : []);
+      if (!list.length) {
+        const opt = document.createElement('option');
+        opt.textContent = 'No Filipino voice detected';
+        opt.disabled = true;
+        selVoice.appendChild(opt);
+        return;
+      }
+      list.forEach(function (v) {
+        const opt = document.createElement('option');
+        opt.value = v.name;
+        opt.textContent = v.name + ' · ' + v.lang;
+        if (voice && v.name === voice.name) opt.selected = true;
+        selVoice.appendChild(opt);
+      });
+    }
+
+    function stopAudio() {
+      if (audioEl) {
+        try { audioEl.pause(); audioEl.src = ''; } catch (e) {}
+        audioEl = null;
+      }
+    }
+
+    function cancel() {
+      token++;
+      stopAudio();
+      if (synth) { try { synth.cancel(); } catch (e) {} }
+      speaking = false;
+      paused = false;
+      chunkList = [];
+      chunkIdx = 0;
+      document.body.classList.remove('narrating');
+      updateUI();
+    }
+
+    function speakNext(myToken) {
+      if (myToken !== token) return;
+      if (!armed || paused) return;
+      if (chunkIdx >= chunkList.length) { finish(myToken); return; }
+
+      const u = new SpeechSynthesisUtterance(chunkList[chunkIdx]);
+      if (voice) { u.voice = voice; u.lang = voice.lang; }
+      u.rate = rate;
+      u.pitch = pitch;
+      u.volume = volume;
+
+      u.onend = function () {
+        if (myToken !== token) return;
+        chunkIdx++;
+        speakNext(myToken);
+      };
+      u.onerror = function () {
+        if (myToken !== token) return;
+        chunkIdx++;
+        speakNext(myToken);
+      };
+
+      try { synth.speak(u); }
+      catch (e) { finish(myToken); }
+    }
+
+    function finish(myToken) {
+      if (myToken !== token) return;
+      speaking = false;
+      paused = false;
+      chunkIdx = 0;
+      document.body.classList.remove('narrating');
+      updateUI();
+      if (typeof completeCb === 'function') completeCb();
+    }
+
+    function playFile(src, myToken) {
+      stopAudio();
+      let a;
+      try { a = new Audio(src); } catch (e) { a = null; }
+      if (!a) { startTTS(myToken); return; }
+      audioEl = a;
+      a.volume = volume;
+      a.playbackRate = rate;
+      a.onended = function () {
+        if (myToken !== token) return;
+        speaking = false;
+        document.body.classList.remove('narrating');
+        updateUI();
+        if (typeof completeCb === 'function') completeCb();
+      };
+      a.onerror = function () {
+        if (myToken !== token) return;
+        audioEl = null;
+        startTTS(myToken);
+      };
+      speaking = true;
+      document.body.classList.add('narrating');
+      updateUI();
+      const p = a.play();
+      if (p && p.catch) p.catch(function () { if (myToken === token) a.onerror(); });
+    }
+
+    function startTTS(myToken) {
+      const spokenText = applyPronunciation(currentText);
+      chunkList = chunkText(spokenText);
+      chunkIdx = 0;
+      if (!chunkList.length) { finish(myToken); return; }
+      speaking = true;
+      paused = false;
+      document.body.classList.add('narrating');
+      updateUI();
+      setTimeout(function () {
+        if (myToken !== token || !armed || paused) return;
+        if (synth && synth.paused) { try { synth.resume(); } catch (e) {} }
+        speakNext(myToken);
+      }, 160);
+    }
+
+    function play(text, opts) {
+      if (!supported || !text) return;
+      opts = opts || {};
+      cancel();
+      const myToken = token;
+      currentText = text;
+      completeCb = opts.onComplete || null;
+      armed = true;
+      paused = false;
+      updateUI();
+      if (opts.audio) playFile(opts.audio, myToken);
+      else startTTS(myToken);
+    }
+
+    function pause() {
+      if (!speaking || paused) return;
+      paused = true;
+      if (audioEl) { try { audioEl.pause(); } catch (e) {} }
+      else if (synth) { try { synth.pause(); } catch (e) {} }
+      updateUI();
+    }
+
+    function resume() {
+      if (!paused) return;
+      paused = false;
+      if (audioEl) {
+        try { audioEl.play(); } catch (e) {}
+      } else if (synth) {
+        try { synth.resume(); } catch (e) {}
+        setTimeout(function () {
+          if (!armed || paused) return;
+          if (!synth.speaking && !synth.pending && chunkIdx < chunkList.length) {
+            speakNext(token);
+          }
+        }, 120);
+      }
+      updateUI();
+    }
+
+    function setArmed(v) {
+      armed = !!v;
+      if (!armed) {
+        cancel();
+      } else {
+        document.body.classList.add('narrating');
+        narrateCurrent(true);
+      }
+      updateUI();
+    }
+
+    function narrateCurrent(immediate) {
+      if (!armed || !narrateEach) return;
+      const slide = slides[current];
+      const text = NARRATION[current] || '';
+      if (!text) return;
+      const audioSrc = (slide && slide.dataset.audio) ? slide.dataset.audio : null;
+      const myToken = token;
+      const delay = immediate ? 220 : 440;
+      setTimeout(function () {
+        if (!armed || token !== myToken) return;
+        play(text, {
+          audio: audioSrc,
+          onComplete: function () {
+            if (typeof completeCbExternal === 'function') completeCbExternal();
+          }
+        });
+      }, delay);
+    }
+
+    function onSlideChange(index, slideEl) {
+      cancel();
+      if (!armed || !narrateEach) return;
+      const text = NARRATION[index] || '';
+      if (!text) return;
+      const audioSrc = (slideEl && slideEl.dataset.audio) ? slideEl.dataset.audio : null;
+      const myToken = token;
+      setTimeout(function () {
+        if (!armed || token !== myToken) return;
+        play(text, {
+          audio: audioSrc,
+          onComplete: function () {
+            if (typeof completeCbExternal === 'function') completeCbExternal();
+          }
+        });
+      }, 440);
+    }
+
+    function setCompleteHandler(fn) { completeCbExternal = fn; }
+    function isArmed() { return armed; }
+    function isAutoAdvance() { return autoAdvance; }
+    function isNarrateEach() { return narrateEach; }
+    function isSupported() { return supported; }
+
+    function updateUI() {
+      if (!bar) return;
+      bar.classList.toggle('on', armed);
+      bar.classList.toggle('speaking', speaking && !paused && armed);
+
+      toggleBtn.classList.toggle('on', armed);
+      speakerIcon.innerHTML = armed ? SVG_ON : SVG_OFF;
+
+      pauseIcon.innerHTML = paused ? SVG_PLAY : SVG_PAUSE;
+      pauseBtn.disabled = !armed || (!speaking && !paused);
+      restartBtn.disabled = !armed;
+      pauseBtn.setAttribute('aria-label', paused ? 'Resume narration' : 'Pause narration');
+      pauseBtn.title = paused ? 'Resume' : 'Pause';
+
+      if (!supported) {
+        label.textContent = 'VOICE N/A';
+      } else if (!armed) {
+        label.textContent = 'NARRATION OFF';
+      } else if (paused) {
+        label.textContent = 'PAUSED';
+      } else if (speaking) {
+        label.textContent = 'NARRATING';
+      } else {
+        label.textContent = 'READY';
+      }
+
+      // Hide the dock while narration plays (persists across auto-advance)
+      const shouldHide = armed && speaking && !paused;
+      dock.classList.toggle('hide-when-playing', shouldHide);
+      if (!shouldHide) dock.classList.remove('near-corner');
+    }
+
+    function pulse(btn) {
+      if (!btn) return;
+      btn.classList.remove('clicked');
+      void btn.offsetWidth;
+      btn.classList.add('clicked');
+      setTimeout(() => btn.classList.remove('clicked'), 520);
+    }
+
+    function openPanel(force) {
+      const willOpen = (typeof force === 'boolean') ? force : panel.hidden;
+      panel.hidden = !willOpen;
+      if (willOpen) {
+        panel.classList.remove('open');
+        void panel.offsetWidth;
+        panel.classList.add('open');
+      }
+    }
+
+    function initProximityReveal() {
+      document.addEventListener('mousemove', function (e) {
+        if (!dock.classList.contains('hide-when-playing')) return;
+        const threshold = 200;
+        const nearRight = (window.innerWidth - e.clientX) < threshold;
+        const nearBottom = (window.innerHeight - e.clientY) < threshold;
+        dock.classList.toggle('near-corner', nearRight && nearBottom);
+      });
+      document.addEventListener('touchstart', function (e) {
+        if (!dock.classList.contains('hide-when-playing')) return;
+        const t = e.touches[0];
+        if (!t) return;
+        const nearRight = (window.innerWidth - t.clientX) < 220;
+        const nearBottom = (window.innerHeight - t.clientY) < 220;
+        if (nearRight && nearBottom) {
+          dock.classList.add('near-corner');
+          setTimeout(function () {
+            if (!dock.matches(':hover')) dock.classList.remove('near-corner');
+          }, 4200);
+        }
+      }, { passive: true });
+    }
+
+    function init() {
+      if (!dock) return;
+      if (!supported) {
+        dock.hidden = true;
+        return;
+      }
+
+      autoAdvSw.setAttribute('aria-checked', String(autoAdvance));
+
+      refreshVoices();
+      if (synth.onvoiceschanged !== undefined) {
+        synth.onvoiceschanged = refreshVoices;
+      }
+      setTimeout(refreshVoices, 400);
+      setTimeout(refreshVoices, 1500);
+
+      toggleBtn.addEventListener('click', function () {
+        pulse(toggleBtn);
+        setArmed(!armed);
+      });
+
+      pauseBtn.addEventListener('click', function () {
+        pulse(pauseBtn);
+        if (paused) resume(); else pause();
+      });
+
+      restartBtn.addEventListener('click', function () {
+        pulse(restartBtn);
+        if (!armed) { setArmed(true); return; }
+        const slide = slides[current];
+        const audioSrc = (slide && slide.dataset.audio) ? slide.dataset.audio : null;
+        play(NARRATION[current] || '', {
+          audio: audioSrc,
+          onComplete: function () {
+            if (typeof completeCbExternal === 'function') completeCbExternal();
+          }
+        });
+      });
+
+      settingsBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        pulse(settingsBtn);
+        dock.classList.add('near-corner');
+        openPanel();
+      });
+
+      document.addEventListener('click', function (e) {
+        if (panel.hidden) return;
+        if (panel.contains(e.target) || settingsBtn.contains(e.target)) return;
+        openPanel(false);
+      });
+
+      selVoice.addEventListener('change', function () {
+        const found = voices.find(v => v.name === selVoice.value);
+        if (found) {
+          voice = found;
+          if (armed && speaking) {
+            const slide = slides[current];
+            const audioSrc = (slide && slide.dataset.audio) ? slide.dataset.audio : null;
+            play(NARRATION[current] || '', {
+              audio: audioSrc,
+              onComplete: function () {
+                if (typeof completeCbExternal === 'function') completeCbExternal();
+              }
+            });
+          }
+        }
+      });
+
+      rateInput.addEventListener('input', function () {
+        rate = parseFloat(rateInput.value);
+        rateVal.textContent = rate.toFixed(2) + '×';
+        if (audioEl) audioEl.playbackRate = rate;
+      });
+
+      pitchInput.addEventListener('input', function () {
+        pitch = parseFloat(pitchInput.value);
+        pitchVal.textContent = pitch.toFixed(2);
+      });
+
+      autoAdvSw.addEventListener('click', function () {
+        autoAdvance = !autoAdvance;
+        autoAdvSw.setAttribute('aria-checked', String(autoAdvance));
+      });
+
+      autoNarrSw.addEventListener('click', function () {
+        narrateEach = !narrateEach;
+        autoNarrSw.setAttribute('aria-checked', String(narrateEach));
+        if (!narrateEach) cancel();
+        else if (armed) narrateCurrent(true);
+      });
+
+      document.addEventListener('keydown', function (e) {
+        const tgt = e.target;
+        if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.tagName === 'SELECT' || tgt.isContentEditable)) return;
+        const k = e.key.toLowerCase();
+        if (k === 'v') {
+          e.preventDefault();
+          setArmed(!armed);
+          pulse(toggleBtn);
+        } else if (k === 'm') {
+          e.preventDefault();
+          if (armed) { if (paused) resume(); else pause(); }
+        }
+      });
+
+      window.addEventListener('beforeunload', function () {
+        try { synth.cancel(); } catch (e) {}
+      });
+
+      initProximityReveal();
+      updateUI();
+    }
+
+    return {
+      init: init,
+      play: play,
+      cancel: cancel,
+      pause: pause,
+      resume: resume,
+      setArmed: setArmed,
+      isArmed: isArmed,
+      isAutoAdvance: isAutoAdvance,
+      isNarrateEach: isNarrateEach,
+      isSupported: isSupported,
+      onSlideChange: onSlideChange,
+      setCompleteHandler: setCompleteHandler,
+      narration: NARRATION,
+      pronunciation: PRONUNCIATION
+    };
+  })();
+
+  Narrator.setCompleteHandler(function () {
+    if (!Narrator.isArmed()) return;
+    if (!Narrator.isAutoAdvance()) return;
+    if (current >= total - 1) return;
+    setTimeout(function () {
+      if (Narrator.isArmed() && Narrator.isAutoAdvance()) go(current + 1);
+    }, 900);
+  });
+
+  Narrator.init();
 
   /* ============================================================
      CONTROLS
@@ -2461,7 +3182,7 @@ body.booted .dot{
 
   document.addEventListener('keydown', function (e) {
     const tgt = e.target;
-    if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.isContentEditable)) return;
+    if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.tagName === 'SELECT' || tgt.isContentEditable)) return;
     const k = e.key;
     if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || k === ' ' || k === 'Enter') {
       e.preventDefault(); go(current + 1);
@@ -2474,7 +3195,6 @@ body.booted .dot{
     }
   });
 
-  // Touch swipe
   let touchX = 0, touchY = 0, tracking = false;
   deck.addEventListener('touchstart', function (e) {
     const t = e.changedTouches[0];
@@ -2491,7 +3211,6 @@ body.booted .dot{
     }
   }, { passive: true });
 
-  // Wheel
   deck.addEventListener('wheel', function (e) {
     if (wheelLock) return;
     if (Math.abs(e.deltaY) < 18) return;
